@@ -1,3 +1,5 @@
 ^cmdline\.arguments\.Rproj$
 ^\.Rproj\.user$
 ^docker_images/.*$
+^codecov\.yml$
+^LICENSE\.md$

@@ -1,11 +1,32 @@
 
 
-#' Argument
+
+#' Argument R6 class constructor
+#'
+#' @param
 #'
 #'
+#' @importFrom R6 R6Class
 #'
-#' @export
-.argument <- R6Class('argument', )
+#' @exportClass
+.argument <- R6Class(
+   'argument',
+   public = list(
+      initialize = function(...){
+
+      },
+      arguments = list(),
+      lazy = getOption('cmdline.lazy.arguments', FALSE),
+
+   ),
+   private = list(),
+   portable = TRUE,
+   lock_class = TRUE,
+   cloneable = FALSE,
+   # set parent.env to be empty, so that we do not use
+   # variables stored in the global or package environment.
+   parent.env = empty_env(),
+)
 
 
 #' Standard method for adding argument
@@ -14,7 +35,7 @@
 #'
 #' @export
 add_argument <- function(obj, ...)
-  UseMethod('add_argument')
+   UseMethod('add_argument')
 
 
 #' Underlying method for adding arguments to the R6 class "argument"
@@ -34,36 +55,42 @@ add_argument <- function(obj, ...)
 #' @param dest
 #' @param - Maybe I should include some other variables.
 #'
-add_argument.argument <- function(obj,
-                                  name,
-                                  short_name,
-                                  action,
-                                  nargs,
-                                  const,
-                                  default,
-                                  type,
-                                  choices,
-                                  required,
-                                  help,
-                                  metavar,
-                                  dest){
+add_argument.parser <- function(obj,
+                                name,
+                                short_name,
+                                action,
+                                nargs,
+                                const,
+                                default,
+                                type,
+                                choices,
+                                required,
+                                help,
+                                metavar,
+                                dest) {
    # Use the object method to add arguments.
-   obj$add_argument(name,
-                    short_name,
-                    action,
-                    nargs,
-                    const,
-                    default,
-                    type,
-                    choices,
-                    required,
-                    help,
-                    metavar,
-                    dest)
+   obj$add_argument(
+      name,
+      short_name,
+      action,
+      nargs,
+      const,
+      default,
+      type,
+      choices,
+      required,
+      help,
+      metavar,
+      dest
+   )
    # Return the object itself to allow for piping using dplyr.
    obj
 }
 
-print.argument <- function(x, ...)
-  x$print(...)
 
+#' Default print method for arguments
+#'
+#' @param x an object of class 'argument'.
+#' @param ... further arguments passed to the print method of argument.
+print.argument <- function(x, ...)
+   x$print(...)

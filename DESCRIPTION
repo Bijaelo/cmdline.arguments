@@ -1,16 +1,26 @@
 Package: cmdline.arguments
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Flexible and fully customizable commandline tool for R
+ scripting and R based applications
+Version: 0.0.0
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Oliver P.",
+           family = "Madsen",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+           email = "first.last@example.com")
+Description: The cmdline.arguments package provides high-level functions
+ for parsing arguments passed from the commandline. While other packages
+ provide alternative interfaces for this purpose, the cmdline.arguments
+ package lets the user specify any type of argument through its
+ simplified interface while the modularized R6 interface allows advanced
+ users to customize any part of the parser in a standardized manner.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
+Depends:
+    R6 (>= 2.1.0),
+    rlang (>= 0.4.7)
+Suggests: 
+    covr,
+    testthat
