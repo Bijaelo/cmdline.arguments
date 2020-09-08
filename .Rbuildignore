@@ -1,0 +1,3 @@
+^cmdline\.arguments\.Rproj$
+^\.Rproj\.user$
+^docker_images/.*$
