@@ -6,7 +6,7 @@ Authors@R:
     person(given = "Oliver P.",
            family = "Madsen",
            role = c("aut", "cre"),
-           email = "first.last@example.com")
+           email = "Oliver.p.madsen@gmail.com")
 Description: The cmdline.arguments package provides high-level functions
  for parsing arguments passed from the commandline. While other packages
  provide alternative interfaces for this purpose, the cmdline.arguments

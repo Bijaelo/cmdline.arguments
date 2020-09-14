@@ -10,7 +10,7 @@
 #'
 #' @exportClass
 .argument <- R6Class(
-   'argument',
+   'cmdline.argument',
    public = list(
       initialize = function(...){
 
@@ -25,7 +25,7 @@
    cloneable = FALSE,
    # set parent.env to be empty, so that we do not use
    # variables stored in the global or package environment.
-   parent.env = empty_env(),
+   parent.env = baseenv(),
 )
 
 
@@ -55,7 +55,7 @@ add_argument <- function(obj, ...)
 #' @param dest
 #' @param - Maybe I should include some other variables.
 #'
-add_argument.parser <- function(obj,
+add_argument.cmdline.parser <- function(obj,
                                 name,
                                 short_name,
                                 action,
