@@ -1,0 +1,13 @@
+
+FROM rocker/rstudio:4.0.3
+
+
+RUN apt-get update -y \
+ & apt-get install -y \
+      build-essential \
+      cmake \
+	  libxml2-dev \
+  & R -e 'install.packages(c("argparser", "R6", "roxygen", "devtools"))'
+
+
+
