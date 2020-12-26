@@ -35,7 +35,7 @@
 #'
 #' \donttest{
 #' # Example of an error:
-#' find_args(c('--abcd ', '-d', 'hello', '--ff'), '-', '--')
+#' find_args(c('-- ', '-d', 'hello', '--ff'), '-', '--')
 #' }
 #'
 #' @returns An integer vector indicating the positions that started with either
@@ -56,14 +56,14 @@ find_args <- function(args = commandArgs(TRUE), sarg, larg){
     if(length(larg) > 1)
       rlang::abort("More than one long argument was supplied.\nPlease provide only a single argument for larg.")
     # is short arg is missing
-    args <- .Call(`_cmdline_arguments_find_args_c`, args, larg)
+    args <- .Call(`_cmdline_arguments_find_args_single_c`, args, larg)
     attr(args, 'argLen') <- rep(nchar(larg), length(args))
     args
   }else if(ml){
     if(length(sarg) > 1)
       rlang::abort("More than one short argument was supplied.\nPlease provide only a single argument for sarg.")
     # if long arg is missing
-    args <- .Call(`_cmdline_arguments_find_args_c`, args, sarg)
+    args <- .Call(`_cmdline_arguments_find_args_single_c`, args, sarg)
     attr(args, 'argLen') <- rep(nchar(sarg), length(args))
     args
   }else{
