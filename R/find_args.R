@@ -44,34 +44,34 @@
 #' The vector contains an attribute 'argLen' indicating the end position for
 #' the argument indicator.
 #'
-#' @importFrom rlang abort
-#'
 #' @export
 find_args <- function(args = commandArgs(TRUE), sarg, larg){
   ms <- missing(sarg)
   ml <- missing(larg)
   if(ms && ml)
-    rlang::abort("Both sarg and larg is missing. At least one must be specified")
+    stop("at least one of 'sarg' and 'larg' must be specified.")
   else if(ms){
-    if(length(larg) > 1)
-      rlang::abort("More than one long argument was supplied.\nPlease provide only a single argument for larg.")
+    if(length(larg) > 1 || !is.character(larg))
+      stop("'larg' must be a single character argument")
     # is short arg is missing
     args <- .Call(`_cmdline_arguments_find_args_single_c`, args, larg)
     attr(args, 'argLen') <- rep(nchar(larg), length(args))
     args
   }else if(ml){
-    if(length(sarg) > 1)
-      rlang::abort("More than one short argument was supplied.\nPlease provide only a single argument for sarg.")
+    if(length(sarg) > 1 || is.character(sarg))
+      stop("'sarg' must be a single character argument")
     # if long arg is missing
     args <- .Call(`_cmdline_arguments_find_args_single_c`, args, sarg)
     attr(args, 'argLen') <- rep(nchar(sarg), length(args))
     args
   }else{
     if(identical(sarg, larg, ignore.environment = TRUE))
-      rlang::abort("sarg and larg are identical. Please specify different arguments!")
-    if(length(sarg) > 1 || length(larg) > 1)
-      rlang::abort("more than one argument was provided for either larg or sarg.\nPlease provide only a single argument for both sarg and larg.")
+      stop("'sarg' and 'larg' cannot be identical")
+    if(length(sarg) > 1 || length(larg) > 1 ||
+       !is.character(sarg) || !is.character(larg))
+      stop("'sarg' and 'larg' must be a single character arguments and at most one must be missing")
     if(nchar(larg) < nchar(sarg)){
+      message("'nchar(sarg) > nchar(larg)' reversing order")
       temp <- larg
       larg <- sarg
       sarg <- temp
@@ -172,14 +172,14 @@ match_args <- function(cmdArgs = commandArgs(TRUE),
   if(missing(cmdArgs) ||
      missing(parserArgs) ||
      missing(helpArg))
-    rlang::abort('cmdArgs, parserArgs and helpArg must be supplied.')
+    stop("'cmdarg', 'parserargs' and 'helpArg' must all be supplied")
   cmdArgPositions <- find_args(cmdArgs, sarg, larg)
   # Did we have any arguments at all?
   if((n <- length(cmdArgPositions)) == 0)
-    rlang::abort("FIXME! I have not gotten any arguments at all, but I dont know how to handle this!")
+    stop("FIXME! I have gotten no arguments at all and I dont know how to handle this. Please tell me this did not get into production...")
   # Did we find help?
   if((n <- length(cmdArgPositions)) == 1 && cmdArgPositions == -1)
-    rlang::abort("FIXME! I spotted help but I don't know how to handle this yet! (If this made it into production then burn me alive)")
+    stop("FIXME! I have spotted help, but I dont know how to handle this yet! Please tell me this did not make it into production...")
   # Order the arguments for our optimized matching function.
   parserArgLast <- sapply(parserArgs, tail, n = 1)
   parserArgsPos <- find_args(parserArgLast, '-', '--')

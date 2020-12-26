@@ -2,6 +2,17 @@
 #include <vector>
 using namespace Rcpp;
 
+
+/* to include Rconfig.h */
+
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(String) dgettext ("pkg", String)
+/* replacepkgas appropriate */
+#else
+#define _(String) (String)
+#endif
+
 // This is a simple example of exporting a C++ function to R. You can
 // source this function into an R session using the Rcpp::sourceCpp
 // function (or via the Source button on the editor toolbar). Learn
@@ -22,8 +33,8 @@ using namespace Rcpp;
  */
 // [[Rcpp::export(rng=false)]]
 IntegerVector find_args_c(const std::vector<std::string> x,
-                        const std::string argS,
-                        const std::string argL){
+                          const std::string argS,
+                          const std::string argL){
   // Maybe int is a bad choice here.
   const R_xlen_t xn = x.size(),
     sn = argS.length(),
@@ -47,7 +58,7 @@ IntegerVector find_args_c(const std::vector<std::string> x,
         goto help_found;
       else if(xin > ln){
         if(xi.substr(ln, lnp1) == " "){
-          Rcpp::stop("Error: Unexpected space \" \" found after argument indicator at position %i.", i + 1);
+          Rcpp::stop("unexpected space \" \" found after argument indicator at position %i", i + 1);
         }else{
           v.push_back(i + 1);
           attr.push_back(ln);
@@ -59,7 +70,7 @@ IntegerVector find_args_c(const std::vector<std::string> x,
         goto help_found;
       else if(xin > sn){
         if(xi.substr(sn, snp1) == " "){
-          Rcpp::stop("Error: Unexpected space \" \" found after argument indicator at position %i.", i + 1);
+          Rcpp::stop("unexpected space \" \" found after argument indicator at position %i", i + 1);
         }else{
           v.push_back(i + 1);
           attr.push_back(sn);
@@ -110,7 +121,7 @@ IntegerVector find_args_single_c(const std::vector<std::string> x,
         goto help_found;
       else if(xin > an){
         if(xi.substr(an, an + 1) == " "){
-          Rcpp::stop("Error: Unexpected space \" \" found after argument indicator at position %i.", i + 1);
+          Rcpp::stop("unexpected space \" \" found after argument indicator at position %i", i + 1);
         }else
           v.push_back(i + 1);
       }
@@ -189,7 +200,7 @@ inline bool iterate_over_parser_arg(const std::string& cmdArg,
       parserArgCurrent++;
   }
   if(!matched && parserArgRequired)
-    stop("Error: Required parser argument, \"%s\", is missing. See %s for more information about required arguments.", parserArgName, helpArg);
+    stop("required parser argument, '%s', is missing. See '%s' for more information about required arguments", parserArgName, helpArg);
   return matched;
 }
 
@@ -213,7 +224,6 @@ inline void iterate_over_cmd_args(const std::vector<std::string>& cmdArgs,
   while(cmdArgCurrentIndex < cmdArgsLen){
     const R_xlen_t cmdArgCurrentPos = cmdArgPositions[cmdArgCurrentIndex];
     const std::string cmdArgCurrent = cmdArgs[cmdArgCurrentPos];
-    std::string par = matched ? "true" : "false";
     const bool cur_matched = iterate_over_parser_arg(cmdArgCurrent,
                                                      parserArgCurrent,
                                                      parserArgEnd,
@@ -235,7 +245,7 @@ inline void iterate_over_cmd_args(const std::vector<std::string>& cmdArgs,
     cmdArgCurrentIndex++;
   }
   if(cmdArgCurrentIndex == cmdArgsLen && !matched) // bit of speed performance inefficiency here, but since it is the error message I
-    stop("Error: Unknown commandline argument \"%s\" provided. See %s for more information about available arguments.",
+    stop("unknown commandline argument \'%s\' provided. See '%s' for more information about available arguments",
          cmdArgs[cmdArgPositions[cmdArgCurrentIndex]], helpArg);
   if(matched)
     output.push_back(output_values);
@@ -290,12 +300,10 @@ Rcpp::List match_args_c(const std::vector<std::string>& cmdArgs,
     const std::string parserArgName = curParserArg[curParserArgN - 1];
     if(cmdArgsLen == cmdArgCurrentIndex){
       if(parserArgRequired)
-        stop("Error: Required parser argument, \"%s\", is missing. See %s for more information about required arguments.", parserArgName, helpArg);
+        stop("required parser argument, '%s', is missing. See '%s' for more information about required arguments", parserArgName, helpArg);
       else
         continue;
     }
-    std::string par = (parserArgRequired ? "true" : "false");
-
     std::vector<std::string>::iterator parserArgCurrent = curParserArg.begin(),
             parserArgEnd = curParserArg.end();
     iterate_over_cmd_args(cmdArgs,
