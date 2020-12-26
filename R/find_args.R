@@ -20,10 +20,11 @@
 #' pattern matching.
 #'
 #' @examples
+#'
 #' # Simple argument finding
 #' find_args(c('--abcd', '-d', 'hello', '--ff'), '-', '--')
 #' find_args(c('--abcd', '-d', 'hello', '--ff'), '-')
-#' find_args(c('--abcd', '-d', 'hello', '--ff'), --')
+#' find_args(c('--abcd', '-d', 'hello', '--ff'), '--')
 #' # Example with help
 #' find_args('-h', '-', '--')
 #' find_args('--help', '-', '--')
@@ -53,30 +54,30 @@ find_args <- function(args = commandArgs(TRUE), sarg, larg){
     rlang::abort("Both sarg and larg is missing. At least one must be specified")
   else if(ms){
     if(length(larg) > 1)
-      rlang::abort("More than one long argument was supplied.
-                   Please provide only a single argument for larg.")
+      rlang::abort("More than one long argument was supplied.\nPlease provide only a single argument for larg.")
     # is short arg is missing
-    args <- find_args_single_c(args, larg)
+    args <- .Call(`_cmdline_arguments_find_args_c`, args, larg)
     attr(args, 'argLen') <- rep(nchar(larg), length(args))
     args
   }else if(ml){
     if(length(sarg) > 1)
-      rlang::abort("More than one short argument was supplied.
-                   Please provide only a single argument for sarg.")
+      rlang::abort("More than one short argument was supplied.\nPlease provide only a single argument for sarg.")
     # if long arg is missing
-    args <- find_args_single_c(args, sarg)
+    args <- .Call(`_cmdline_arguments_find_args_c`, args, sarg)
     attr(args, 'argLen') <- rep(nchar(sarg), length(args))
     args
   }else{
-    if(sarg == larg)
+    if(identical(sarg, larg, ignore.environment = TRUE))
       rlang::abort("sarg and larg are identical. Please specify different arguments!")
+    if(length(sarg) > 1 || length(larg) > 1)
+      rlang::abort("more than one argument was provided for either larg or sarg.\nPlease provide only a single argument for both sarg and larg.")
     if(nchar(larg) < nchar(sarg)){
       temp <- larg
       larg <- sarg
       sarg <- temp
     }
     # If both are provided
-    find_args_c(args, sarg, larg)
+    .Call(`_cmdline_arguments_find_args_c`, args, sarg, larg)
   }
 }
 
@@ -112,8 +113,94 @@ find_args <- function(args = commandArgs(TRUE), sarg, larg){
 #' p <- c(p, 5)
 #' attr(p, 'argLen') <- c(2, 1, 2, 2)
 #' order_args(args, p)
-order_args <- function(args, argPos){
-  argPos[order(substring_c(args[argPos], attr(argPos, 'argLen')))]
+order_args <- function(args, argPos, includeNext = FALSE, lastPos = Inf){
+  if(includeNext){
+    or <- order(.Call(`_cmdline_arguments_substring_c`,
+                      args[argPos],
+                      attr(argPos, 'argLen')))
+    ou <- argPos[or]
+    attr(ou, 'next') <- c(argPos[-1], lastPos + 1)[or]
+    ou
+  }else
+    argPos[order(.Call(`_cmdline_arguments_substring_c`,
+                       args[argPos],
+                       attr(argPos, 'argLen')))]
 }
+
+
+###             ###
+## !! FIX ME !!  ##
+## Needs the     ##
+## parser object ##
+###             ###
+
+#' Match command arguments against a list of parser arguments
+#'
+#' @description This function can be used to interact with the low-level
+#' functionality of the cmdline.arguments package. The match_args function takes
+#' a vector of commandline argmuments, parser arguments and other descriptors
+#' and returns a named list of extracted value from cmdArgs. The interface is however not user-friendly.
+#'
+#'
+#' @inheritParams find_args
+#' @param parserArgs arguments to be searched for
+#' @param parserArgsRequired logical vector indicaing whether an argument is strictly required
+#' @param helpArg the argument used if one seeks help with the package
+#'
+#' @examples
+#' cmdArgs <- c('--go', 'abc', 'efd', '-g', 'my world', '--garage', 'no', '-f', '-v')
+#' parserArgs <- list(c('-g', '--garage'), '--go', '-f', '-v')
+#' parserArgsRequired <- rep(TRUE, 4)
+#' helpArg <- '--help'
+#' sarg <- '-'
+#' larg <- '--'
+#' match_args(cmdArgs,
+#'            parserArgs,
+#'            parserArgsRequired,
+#'            helpArg,
+#'            sarg,
+#'            larg)
+#' @export
+match_args <- function(cmdArgs = commandArgs(TRUE),
+                       parserArgs,
+                       parserArgsRequired,
+                       helpArg,
+                       sarg,
+                       larg){
+  if(missing(cmdArgs) ||
+     missing(parserArgs) ||
+     missing(helpArg))
+    rlang::abort('cmdArgs, parserArgs and helpArg must be supplied.')
+  cmdArgPositions <- find_args(cmdArgs, sarg, larg)
+  # Did we have any arguments at all?
+  if((n <- length(cmdArgPositions)) == 0)
+    rlang::abort("FIXME! I have not gotten any arguments at all, but I dont know how to handle this!")
+  # Did we find help?
+  if((n <- length(cmdArgPositions)) == 1 && cmdArgPositions == -1)
+    rlang::abort("FIXME! I spotted help but I don't know how to handle this yet! (If this made it into production then burn me alive)")
+  # Order the arguments for our optimized matching function.
+  parserArgLast <- sapply(parserArgs, tail, n = 1)
+  parserArgsPos <- find_args(parserArgLast, '-', '--')
+  parserArgsOrder <- order_args(parserArgLast,
+                                parserArgsPos)
+  cmdArgPositions <- order_args(cmdArgs,
+                                cmdArgPositions,
+                                TRUE,
+                                length(cmdArgs))
+  if(missing(parserArgsRequired) ||
+     length(parserArgsRequired) != length(parserArgs) ||
+     !is.logical(parserArgsRequired))
+    rlang::abort(" should be a logical vector of equal length to parserArgs.")
+  .Call(`_cmdline_arguments_match_args_c`,
+        cmdArgs,
+        cmdArgPositions - 1,
+        attr(cmdArgPositions, 'next') - 2,
+        parserArgs,
+        parserArgsOrder - 1,
+        parserArgsRequired,
+        helpArg
+        )
+}
+
 
 

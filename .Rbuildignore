@@ -3,3 +3,5 @@
 ^docker_images/.*$
 ^codecov\.yml$
 ^LICENSE\.md$
+^drawio
+^\.github$
