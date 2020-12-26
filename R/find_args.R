@@ -113,6 +113,8 @@ find_args <- function(args = commandArgs(TRUE), sarg, larg){
 #' p <- c(p, 5)
 #' attr(p, 'argLen') <- c(2, 1, 2, 2)
 #' order_args(args, p)
+#'
+#' @export
 order_args <- function(args, argPos, includeNext = FALSE, lastPos = Inf){
   if(includeNext){
     or <- order(.Call(`_cmdline_arguments_substring_c`,
