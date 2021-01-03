@@ -10,6 +10,10 @@ order_args(args, argPos, includeNext = FALSE, lastPos = Inf)
 \item{args}{commandline argument (usually from commandArgs(TRUE)).}
 
 \item{argPos}{argument position vector, see \code{\link{find_args}}.}
+
+\item{includeNext}{logical indicator, if TRUE the next position of argPos is included as an attribute "next"}
+
+\item{lastPos}{The final position within args, usually length(args)}
 }
 \value{
 integer vector that gives the numeric order of the indices in the
@@ -25,6 +29,7 @@ is c(3, 2). Sorting arguments allows a single iteration over each vector
 when matching the arguments.
 }
 \examples{
+\donttest{
 args <- c('efgh', '--gijs', '-abcd')
 p <- c(2, 3)
 attr(p, 'argLen') <- c(2, 1)
@@ -39,4 +44,6 @@ args <- c(args, '--qqq')
 p <- c(p, 5)
 attr(p, 'argLen') <- c(2, 1, 2, 2)
 order_args(args, p)
+}
+
 }

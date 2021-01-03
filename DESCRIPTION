@@ -15,7 +15,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Depends:
     R6 (>= 2.1.0),
-    rlang (>= 0.4.7)
+    utils
 Suggests: 
     covr,
     testthat

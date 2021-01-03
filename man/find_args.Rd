@@ -51,9 +51,9 @@ find_args('--help', '-')
 # Example with alternative indicator
 find_args('/h', , '/')
 
-\donttest{
+\dontrun{
 # Example of an error:
-find_args(c('--abcd ', '-d', 'hello', '--ff'), '-', '--')
+find_args(c('-- ', '-d', 'hello', '--ff'), '-', '--')
 }
 
 }

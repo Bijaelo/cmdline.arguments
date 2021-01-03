@@ -33,7 +33,7 @@
 #' # Example with alternative indicator
 #' find_args('/h', , '/')
 #'
-#' \donttest{
+#' \dontrun{
 #' # Example of an error:
 #' find_args(c('-- ', '-d', 'hello', '--ff'), '-', '--')
 #' }
@@ -54,14 +54,14 @@ find_args <- function(args = commandArgs(TRUE), sarg, larg){
     if(length(larg) > 1 || !is.character(larg))
       stop("'larg' must be a single character argument")
     # is short arg is missing
-    args <- .Call(`_cmdline_arguments_find_args_single_c`, args, larg)
+    args <- .Call("_find_args_single_c", args, larg)
     attr(args, 'argLen') <- rep(nchar(larg), length(args))
     args
   }else if(ml){
-    if(length(sarg) > 1 || is.character(sarg))
+    if(length(sarg) > 1 || !is.character(sarg))
       stop("'sarg' must be a single character argument")
     # if long arg is missing
-    args <- .Call(`_cmdline_arguments_find_args_single_c`, args, sarg)
+    args <- .Call("_find_args_single_c", args, sarg)
     attr(args, 'argLen') <- rep(nchar(sarg), length(args))
     args
   }else{
@@ -71,13 +71,13 @@ find_args <- function(args = commandArgs(TRUE), sarg, larg){
        !is.character(sarg) || !is.character(larg))
       stop("'sarg' and 'larg' must be a single character arguments and at most one must be missing")
     if(nchar(larg) < nchar(sarg)){
-      message("'nchar(sarg) > nchar(larg)' reversing order")
+      warning("'nchar(sarg) > nchar(larg)' reversing order")
       temp <- larg
       larg <- sarg
       sarg <- temp
     }
     # If both are provided
-    .Call(`_cmdline_arguments_find_args_c`, args, sarg, larg)
+    .Call("_find_args_c", args, sarg, larg)
   }
 }
 
@@ -86,6 +86,8 @@ find_args <- function(args = commandArgs(TRUE), sarg, larg){
 #'
 #' @param args commandline argument (usually from commandArgs(TRUE)).
 #' @param argPos argument position vector, see \code{\link{find_args}}.
+#' @param includeNext logical indicator, if TRUE the next position of argPos is included as an attribute "next"
+#' @param lastPos The final position within args, usually length(args)
 #'
 #' @description This function only exists for optimization purposes.
 #' The function takes an argument vector (string vector) and a position vector
@@ -115,16 +117,18 @@ find_args <- function(args = commandArgs(TRUE), sarg, larg){
 #' attr(p, 'argLen') <- c(2, 1, 2, 2)
 #' order_args(args, p)
 #' }
+#'
+#' @export
 order_args <- function(args, argPos, includeNext = FALSE, lastPos = Inf){
   if(includeNext){
-    or <- order(.Call(`_cmdline_arguments_substring_c`,
+    or <- order(.Call(`_substring_c`,
                       args[argPos],
                       attr(argPos, 'argLen')))
     ou <- argPos[or]
     attr(ou, 'next') <- c(argPos[-1], lastPos + 1)[or]
     ou
   }else
-    argPos[order(.Call(`_cmdline_arguments_substring_c`,
+    argPos[order(.Call(`_substring_c`,
                        args[argPos],
                        attr(argPos, 'argLen')))]
 }
@@ -144,10 +148,12 @@ order_args <- function(args, argPos, includeNext = FALSE, lastPos = Inf){
 #' and returns a named list of extracted value from cmdArgs. The interface is however not user-friendly.
 #'
 #'
-#' @inheritParams find_args
+#' @param cmdArgs vector of commandline arguments. Defaults to commandArgs(TRUE)
 #' @param parserArgs arguments to be searched for
 #' @param parserArgsRequired logical vector indicaing whether an argument is strictly required
 #' @param helpArg the argument used if one seeks help with the package
+#' @param sarg short argument indicator (one letter arguments). No default
+#' @param larg long argument indicator (one or more letter).
 #'
 #' @examples
 #' cmdArgs <- c('--go', 'abc', 'efd', '-g', 'my world', '--garage', 'no', '-f', '-v')
@@ -192,8 +198,8 @@ match_args <- function(cmdArgs = commandArgs(TRUE),
   if(missing(parserArgsRequired) ||
      length(parserArgsRequired) != length(parserArgs) ||
      !is.logical(parserArgsRequired))
-    rlang::abort(" should be a logical vector of equal length to parserArgs.")
-  .Call(`_cmdline_arguments_match_args_c`,
+    stop("parserArgsRequired should be a logical vector with length equal to the length of parserArgs.")
+  .Call(`_match_args_c`,
         cmdArgs,
         cmdArgPositions - 1,
         attr(cmdArgPositions, 'next') - 2,

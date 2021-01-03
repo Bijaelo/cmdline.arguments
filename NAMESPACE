@@ -2,6 +2,8 @@
 
 export(find_args)
 export(match_args)
-importFrom(Rcpp,sourceCpp)
-importFrom(rlang,abort)
+export(order_args)
+importFrom(R6, R6Class)
+importFrom(utils, head, tail)
+importFrom(Rcpp, evalCpp)
 useDynLib(cmdline.arguments, .registration = TRUE)

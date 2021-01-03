@@ -13,11 +13,13 @@ attr(complicatedArg, 'argLen') <- c(2, 1, 1, 2, 1)
 helpFound <- -1;
 no_args <- integer(0)
 attr(no_args, 'argLen') <- numeric(0)
-error_1 <- "Error: Unexpected space \" \" found after argument indicator at position 1."
-error_2 <- "More than one long argument was supplied.\nPlease provide only a single argument for larg."
-error_3 <- "More than one short argument was supplied.\nPlease provide only a single argument for sarg."
-error_4 <- "sarg and larg are identical. Please specify different arguments!"
-error_5 <- "more than one argument was provided for either larg or sarg.\nPlease provide only a single argument for both sarg and larg."
+error_1 <- "unexpected space \" \" found after argument indicator at position 1"
+error_2 <- "'larg' must be a single character argument"
+error_3 <- "'sarg' must be a single character argument"
+error_4 <- "'sarg' and 'larg' cannot be identical"
+error_5 <- "'sarg' and 'larg' must be a single character arguments and at most one must be missing"
+
+
 
 testthat::test_that("Test that \"find_args\" returns the expected output in all known cases",
                     {

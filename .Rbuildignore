@@ -1,7 +1,10 @@
 ^cmdline\.arguments\.Rproj$
 ^\.Rproj\.user$
-^docker_images/.*$
+^docker
 ^codecov\.yml$
 ^LICENSE\.md$
 ^drawio
-^\.github$
+^\.github
+^\.git
+^\.Rhistory$
+.*Makevars\.in$

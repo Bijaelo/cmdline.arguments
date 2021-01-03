@@ -2,7 +2,7 @@
 % Please edit documentation in R/find_args.R
 \name{match_args}
 \alias{match_args}
-\title{Match arguments}
+\title{Match command arguments against a list of parser arguments}
 \usage{
 match_args(
   cmdArgs = commandArgs(TRUE),
@@ -14,6 +14,8 @@ match_args(
 )
 }
 \arguments{
+\item{cmdArgs}{vector of commandline arguments. Defaults to commandArgs(TRUE)}
+
 \item{parserArgs}{arguments to be searched for}
 
 \item{parserArgsRequired}{logical vector indicaing whether an argument is strictly required}
@@ -25,7 +27,10 @@ match_args(
 \item{larg}{long argument indicator (one or more letter).}
 }
 \description{
-Match arguments
+This function can be used to interact with the low-level
+functionality of the cmdline.arguments package. The match_args function takes
+a vector of commandline argmuments, parser arguments and other descriptors
+and returns a named list of extracted value from cmdArgs. The interface is however not user-friendly.
 }
 \examples{
 cmdArgs <- c('--go', 'abc', 'efd', '-g', 'my world', '--garage', 'no', '-f', '-v')
@@ -34,7 +39,7 @@ parserArgsRequired <- rep(TRUE, 4)
 helpArg <- '--help'
 sarg <- '-'
 larg <- '--'
-cmdline.arguments:::match_args(cmdArgs,
+match_args(cmdArgs,
            parserArgs,
            parserArgsRequired,
            helpArg,
