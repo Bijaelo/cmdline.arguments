@@ -3,6 +3,7 @@
 export(find_args)
 export(match_args)
 export(order_args)
+export(arg, arg_getsarg)
 importFrom(R6, R6Class)
 importFrom(utils, head, tail)
 importFrom(Rcpp, evalCpp)
