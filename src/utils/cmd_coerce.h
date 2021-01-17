@@ -156,9 +156,19 @@ struct primsxp_struct {
 #define PRIMNAME(x)	(R_FunTab[(x)->u.primsxp.offset].name)
 #endif
 
+
 // because I still dont know how to get access to FunTab
 namespace cmdline_arguments::utils::coerce {
-  SEXP cmd_do_docall(SEXP what, SEXP args, Rcpp::Environment, std::string);
+  SEXP cmd_do_docall(SEXP, SEXP, Rcpp::Environment, std::string);
 }
-
+/*
+cmdline_arguments::utils::coerce::cmd_do_docall(// SEXP
+                                                SEXPREC*,
+                                                // SEXP
+                                                SEXPREC*,
+                                                // Environment <- maybe this one.
+                                                Rcpp::Environment_Impl<Rcpp::PreserveStorage>,
+                                                // basic string
+                                                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)
+*/
 #endif
