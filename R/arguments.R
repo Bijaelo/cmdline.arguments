@@ -47,12 +47,29 @@
 #' FIX ME:: add description of remaining arguments:
 #'
 #' @note if nchar(sflag) > nchar(lflag) the arguments are switched internally.
+#'
+#' @examples
+#' # Create a simple argument and extract it's values.
+#' f <- createArgument('h', 'help', 'help', 3, TRUE, FALSE)
+#' getflags(f)
+#' getsflag(f)
+#' getlflag(f)
+#' getnarg(f)
+#' getnargparsed(f)
+#' isflag(f)
+#' isrequired(f)
+#' getname(f)
+#'
 createArgument <- function(sflag,
                            lflag,
                            name,
                            narg,
                            flag = FALSE,
-                           required = TRUE){
+                           required = TRUE,
+                           parse.func,
+                           additional_args = list(),
+                           parse.func.opt = list()
+                           ){
   # We gotta ensure that flag and required are not null types and only contain
   # a single value. This is slightly more difficult from C++ (aka: i haven't figured out how yet)
   if(!is.logical(flag) ||
@@ -72,9 +89,11 @@ createArgument <- function(sflag,
   if(!missing(lflag)){
     if(!is.character(lflag) || length(lflag) > 1)
       stop("lflag should be a single character string")
-    res <- .Call("_createArgument", sflag, lflag, name, as.character(narg), flag, required)
+    res <- .Call("_createArgument", sflag, lflag, name, as.character(narg),
+                 flag, required, parse.func, additional_args)
   }else
-    res <- .Call("_createArgumentS", sflag, name, as.character(narg), flag, required)
+    res <- .Call("_createArgumentS", sflag, name, as.character(narg),
+                 flag, required, parse.func, additional_args)
   class(res) <- c("cmd_arg", class(res))
   res
 }

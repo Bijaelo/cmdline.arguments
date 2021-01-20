@@ -8,36 +8,60 @@ export(getsflag)
 export(getnarg)
 export(getnargparsed)
 export(getname)
+export(getparsefunc)
+export(getunparsedargs)
 export(isflag)
 export(isrequired)
 export(createArgument)
 export(setUnparsedArgs)
 export(demandReady)
+export(parseargs)
 if(getRversion() >= "3.6.0") {
+# getflags
   S3method(getflags, cmd_arg)
-  S3method(getsflag, cmd_arg)
-  S3method(getlflag, cmd_arg)
-  S3method(extract_ptr, cmd_arg)
   S3method(getflags, cmd_parser)
+# getsflag
+  S3method(getsflag, cmd_arg)
   S3method(getsflag, cmd_parser)
+# getlflag
+  S3method(getlflag, cmd_arg)
   S3method(getlflag, cmd_parser)
+# extract_ptr
+  S3method(extract_ptr, cmd_arg)
   S3method(extract_ptr, cmd_parser)
+# setUnparsedArgs
   S3method(setUnparsedArgs, cmd_arg)
   S3method(setUnparsedArgs, cmd_parser)
+# isflag
   S3method(isflag, cmd_arg)
   S3method(isflag, cmd_parser)
+# getnarg
   S3method(getnarg, cmd_arg)
   S3method(getnarg, cmd_parser)
+# getnargparsed
   S3method(getnargparsed, cmd_arg)
   S3method(getnargparsed, cmd_parser)
+# getname
   S3method(getname, cmd_arg)
   S3method(getname, cmd_parser)
+# isrequired
   S3method(isrequired, cmd_arg)
   S3method(isrequired, cmd_parser)
+# demandReady
   S3method(demandReady, cmd_arg)
   S3method(demandReady, cmd_parser)
+# getparsefunc
+  S3method(getparsefunc, cmd_arg)
+  S3method(getparsefunc, cmd_parser)
+# getunparsedargs
+  S3method(getunparsedargs, cmd_arg)
+  S3method(getunparsedargs, cmd_parser)
+# parseargs
+  S3method(parseargs, cmd_arg)
+  S3method(parseargs, cmd_parser)
 }
 importFrom(R6, R6Class)
 importFrom(utils, head, tail)
 importFrom(Rcpp, evalCpp)
+importFrom(glue, glue)
 useDynLib(cmdline.arguments, .registration = TRUE)

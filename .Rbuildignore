@@ -8,3 +8,5 @@
 ^\.git
 ^\.Rhistory$
 .*Makevars\.in$
+^debug_test
+^debug_test.*

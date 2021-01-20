@@ -15,11 +15,14 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Depends:
     R6 (>= 2.1.0),
-    utils
+    utils,
+    glue (>= 1.4.2)
 Suggests: 
     covr,
     testthat
 LinkingTo: 
-    Rcpp
+    Rcpp,
+    glue
 Imports: 
-    Rcpp
+    Rcpp,
+    glue

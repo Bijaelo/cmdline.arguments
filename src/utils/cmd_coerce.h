@@ -2,8 +2,11 @@
 
 #ifndef cmdline_coerce_h
 #define cmdline_coerce_h
-#include <Rinternals.h>
+// Rinternal break code compilation, because of the
+// #include <Rinternals.h>
 #include <R.h>
+#include <Rcpp.h>
+// #include <string>
 using namespace Rcpp;
 
 #define NAMED_BITS 16
@@ -159,7 +162,7 @@ struct primsxp_struct {
 
 // because I still dont know how to get access to FunTab
 namespace cmdline_arguments::utils::coerce {
-  SEXP cmd_do_docall(SEXP, SEXP, Rcpp::Environment, std::string);
+  inline SEXP cmd_do_docall(SEXP, SEXP, Rcpp::Environment, std::string);
 }
 /*
 cmdline_arguments::utils::coerce::cmd_do_docall(// SEXP

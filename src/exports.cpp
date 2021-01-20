@@ -1,8 +1,8 @@
-#include <Rcpp.h>
 
+
+#include "common_includes.h"
 #include "utils/matching.h"
 #include "parser/argument/argument.h"
-#include <Rinternals.h>
 //#include <arguments.h> // currently non-existent
 //#include <parser.h> // currently non-existent
 
@@ -102,7 +102,9 @@ extern "C" {
                       SEXP _name = R_NilValue,
                       SEXP _narg = R_NilValue,
                       SEXP _flag = R_NilValue,
-                      SEXP _required = R_NilValue){
+                      SEXP _required = R_NilValue,
+                      SEXP _parse_fun = R_NilValue,
+                      SEXP _additional_args = R_NilValue) {
   BEGIN_RCPP
     /* narg needs a few extra conversion checks.
      * just in case we were provided with an integer/double value, we'll convert
@@ -124,7 +126,9 @@ extern "C" {
                                     as<string>(_narg),
                                     // convert SEXP to boolean.
                                     Rf_asLogical(_flag) != 0,
-                                    Rf_asLogical(_required) != 0));
+                                    Rf_asLogical(_required) != 0,
+                                    _parse_fun,
+                                    _additional_args));
     return wrap(ptr);
   END_RCPP
   }
@@ -132,14 +136,18 @@ extern "C" {
                       SEXP _name = R_NilValue,
                       SEXP _narg = R_NilValue,
                       SEXP _flag = R_NilValue,
-                      SEXP _required = R_NilValue){
+                      SEXP _required = R_NilValue,
+                      SEXP _parse_fun = R_NilValue,
+                      SEXP _additional_args = R_NilValue){
     BEGIN_RCPP
     XPtr<argument> ptr(new argument(as<string>(_flagg),
                                     as<string>(_name),
                                     as<string>(_narg),
                                     // _flag == 0 and _required == 1..
-                                    (bool)(Rf_asLogical(_flag) != 0),
-                                    (bool)(Rf_asLogical(_required) != 0)));
+                                    (Rf_asLogical(_flag) != 0),
+                                    (Rf_asLogical(_required) != 0),
+                                    _parse_fun,
+                                    _additional_args));
     return wrap(ptr);
     END_RCPP
   }
@@ -189,11 +197,35 @@ extern "C" {
     _ptr -> demandReady();
     return R_NilValue;
   }
+  SEXP getparsefun(SEXP ptr){
+    XPtr<argument> _ptr(ptr);
+    return _ptr -> getParseFun();
+  }
+  SEXP getunparsedargs(SEXP ptr){
+    XPtr<argument> _ptr(ptr);
+    return _ptr -> getUnparsedArgs();
+  }
 
+  SEXP parseargs(SEXP ptr){
+    XPtr<argument> _ptr(ptr);
+    BEGIN_RCPP
+    _ptr -> parseArgs();
+    return _ptr -> getParsedArgs();
+    END_RCPP
+  }
+  SEXP do_docall(SEXP fun, SEXP args, SEXP env, SEXP name){
+    BEGIN_RCPP
+    return cmdline_arguments::utils::coerce::cmd_do_docall(fun, args, env, as<std::string>(name));
+    END_RCPP
+  }
 }
 
 
 #include <R_ext/Rdynload.h>
+
+// borrowed from Matrix
+#define CALLDEF(name, n)  {#name, (DL_FUNC) &name, n}
+#define EXTDEF(name)  {#name, (DL_FUNC) &name, -1}
 
 // Create a list of pointers to be exported to R
 static const R_CallMethodDef CallEntries[] = {
@@ -203,18 +235,22 @@ static const R_CallMethodDef CallEntries[] = {
   {"_find_args_single_c", (DL_FUNC) _find_args_single_c, 2},
   {"_substring_c", (DL_FUNC) &_substring_c, 2},
   {"_match_args_c", (DL_FUNC) &_match_args_c, 7},
-  {"_createArgument", (DL_FUNC) &createArgument, 6},
-  {"_createArgumentS", (DL_FUNC) &createArgumentS, 5},
+  {"_createArgument", (DL_FUNC) &createArgument, 8},
+  {"_createArgumentS", (DL_FUNC) &createArgumentS, 7},
   {"_getsflag", (DL_FUNC) &getsflag, 1},
   {"_getlflag", (DL_FUNC) &getlflag, 1},
   {"_getflags", (DL_FUNC) &getflags, 1},
   {"_getnarg", (DL_FUNC) &getnarg, 1},
   {"_getname", (DL_FUNC) &getname, 1},
+  {"_getparsefun", (DL_FUNC) &getparsefun, 1},
+  {"_getunparsedargs", (DL_FUNC) &getunparsedargs, 1},
   {"_isflag", (DL_FUNC) &isflag, 1},
   {"_isrequired", (DL_FUNC) &isrequired, 1},
   {"_getnargparsed", (DL_FUNC) &getnargparsed, 1},
   {"_setUnparsedArgs", (DL_FUNC) &setUnparsedArgs, 2},
   {"_demandReady", (DL_FUNC) &demandReady, 1},
+  {"_parseargs", (DL_FUNC) &parseargs, 1},
+  {"_do_docall", (DL_FUNC) &do_docall, 4},
   {NULL, NULL, 0}
 };
 

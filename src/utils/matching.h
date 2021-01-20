@@ -5,6 +5,7 @@
 #include <Rcpp.h>
 #include <vector>
 #include <string>
+
 using namespace Rcpp;
 
 namespace cmdline_arguments{

@@ -50,16 +50,17 @@ PATH: /c/Program Files/Microsoft SQL Server/150/Tools/Binn
 PATH: /c/Program Files/Microsoft SQL Server/150/DTS/Binn
 PATH: /c/Users/olive/AppData/Local/Programs/Python/Python39
 PATH: /c/Program Files/Pandoc
-PATH: /c/Program Files/Docker/Docker/resources/bin
-PATH: /c/ProgramData/DockerDesktop/version-bin
 PATH: /c/Users/olive/R/R-cran/R-4.0.3/bin/x64
 PATH: /c/Users/olive/gdb-10.1/gdb
 PATH: /c/Program Files/RStudio/bin
 PATH: /c/rtools40/mingw64/bin
+PATH: /c/Program Files/Docker/Docker/resources/bin
+PATH: /c/ProgramData/DockerDesktop/version-bin
 PATH: /c/Users/olive/AppData/Local/Microsoft/WindowsApps
 PATH: /c/Users/olive/AppData/Local/Programs/Microsoft VS Code Insiders/bin
 PATH: /c/Users/olive/.dotnet/tools
 PATH: /c/Users/olive/AppData/Roaming/TinyTeX/bin/win32
+PATH: /c/Program Files/RStudio/bin/postback
 PATH: /bin
 PATH: /c/Program Files/RStudio/bin/msys-ssh-1000-18
 
@@ -117,7 +118,7 @@ PACKAGE_URL=''
 PACKAGE_VERSION=''
 PATH_SEPARATOR=':'
 SHELL='/bin/sh'
-SUBDIR_SOURCES='exports.cpp parser/argument/argument.cpp utils/matching.cpp '
+SUBDIR_SOURCES='exports.cpp parser/argument/argument.cpp utils/cmd_coerce.cpp utils/matching.cpp '
 bindir='${exec_prefix}/bin'
 build_alias=''
 datadir='${datarootdir}'

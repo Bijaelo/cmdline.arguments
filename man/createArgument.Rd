@@ -4,7 +4,17 @@
 \alias{createArgument}
 \title{Method for generating a single argument}
 \usage{
-createArgument(sflag, lflag, name, narg, flag = FALSE, required = TRUE)
+createArgument(
+  sflag,
+  lflag,
+  name,
+  narg,
+  flag = FALSE,
+  required = TRUE,
+  parse.func,
+  additional_args = list(),
+  parse.func.opt = list()
+)
 }
 \arguments{
 \item{sflag}{smallest flag}
@@ -60,4 +70,17 @@ FIX ME:: add description of remaining arguments:
 }
 \note{
 if nchar(sflag) > nchar(lflag) the arguments are switched internally.
+}
+\examples{
+# Create a simple argument and extract it's values.
+f <- createArgument('h', 'help', 'help', 3, TRUE, FALSE)
+getflags(f)
+getsflag(f)
+getlflag(f)
+getnarg(f)
+getnargparsed(f)
+isflag(f)
+isrequired(f)
+getname(f)
+
 }
