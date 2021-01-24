@@ -60,7 +60,6 @@ PATH: /c/Users/olive/AppData/Local/Microsoft/WindowsApps
 PATH: /c/Users/olive/AppData/Local/Programs/Microsoft VS Code Insiders/bin
 PATH: /c/Users/olive/.dotnet/tools
 PATH: /c/Users/olive/AppData/Roaming/TinyTeX/bin/win32
-PATH: /c/Program Files/RStudio/bin/postback
 PATH: /bin
 PATH: /c/Program Files/RStudio/bin/msys-ssh-1000-18
 
@@ -118,7 +117,7 @@ PACKAGE_URL=''
 PACKAGE_VERSION=''
 PATH_SEPARATOR=':'
 SHELL='/bin/sh'
-SUBDIR_SOURCES='exports.cpp parser/argument/argument.cpp utils/cmd_coerce.cpp utils/matching.cpp '
+SUBDIR_SOURCES='exports.cpp parser/argument/argument.cpp utils/cmd_coerce.cpp utils/exceptions.cpp utils/matching.cpp utils/Rapi.cpp '
 bindir='${exec_prefix}/bin'
 build_alias=''
 datadir='${datarootdir}'

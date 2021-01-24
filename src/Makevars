@@ -1,11 +1,10 @@
 # Default make file
 PKG_CPPFLAGS=-I.
-PKG_LIBS=$(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 
 CXX_STD = CXX20
 
 # Include all C++ files in src/ and its subdirectories: src/*
-SOURCES=exports.cpp parser/argument/argument.cpp utils/cmd_coerce.cpp utils/matching.cpp 
+SOURCES=exports.cpp parser/argument/argument.cpp utils/cmd_coerce.cpp utils/matching.cpp utils/Rapi.cpp
 
 # Obtain the object files
 OBJECTS=$(SOURCES:.cpp=.o)

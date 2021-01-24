@@ -21,8 +21,7 @@ Suggests:
     covr,
     testthat
 LinkingTo: 
-    Rcpp,
-    glue
+    Rcpp
 Imports: 
     Rcpp,
     glue
