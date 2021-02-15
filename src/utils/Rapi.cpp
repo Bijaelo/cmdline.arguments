@@ -4,6 +4,6 @@
 namespace cmdline_arguments::utils::Rapi{
   //template <typename T>
   bool cmd_ISNULL(SEXP sexp){
-    return TYPEOF(sexp) == NILSXP;
+    return sexp == R_NilValue || TYPEOF(sexp) == NILSXP;
   }
 }
