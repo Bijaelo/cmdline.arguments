@@ -1,10 +1,10 @@
 # Default make file
 PKG_CPPFLAGS=-I.
 
-CXX_STD = CXX20
+CXX_STD = CXX17
 
 # Include all C++ files in src/ and its subdirectories: src/*
-SOURCES=exports.cpp parser/argument/argument.cpp utils/cmd_coerce.cpp utils/matching.cpp utils/Rapi.cpp
+SOURCES=exports.cpp parser/narg/narg.cpp utils/converters/converters.cpp utils/type_name/type_name.cpp
 
 # Obtain the object files
 OBJECTS=$(SOURCES:.cpp=.o)
