@@ -96,6 +96,29 @@ namespace cmdline_arguments::traits{
   //typedef Rcpp::traits::integral_constant<input_types, list_input_type>
   typedef input_type<input_types, list_input_type, vector<string>, List>
     list_input;
+  /*
+  // typedef generators.
+  template<typename _T, _T _V, typename _Z>
+  _Z generate_input_type(_T _V);
+
+  template<>
+  individual_input generate_input_type<input_types, individual_input_type, individual_input>(input_types){
+    individual_input x;
+    return x;
+  };
+
+  template<>
+  list_input generate_input_type<input_types, list_input_type, list_input>(input_types){
+    list_input x;
+    return x;
+  };
+
+  template<>
+  vector_input generate_input_type<input_types, vector_input_type, vector_input>(input_types){
+    vector_input x;
+    return x;
+  };
+   */
 }
 
 #endif

@@ -60,8 +60,6 @@ namespace cmdline_arguments::parser{
 
     void add(R_xlen_t&);
 
-    R_xlen_t leftover();
-
 
     // Operator overload to "digest"
     bool operator()(R_xlen_t&) const;

@@ -8,16 +8,17 @@
 #include <string>
 #include <map>
 #include <Rcpp.h>
-#include <R.h>
 #include <cctype>
-#include "utils/traits/traits.h"
 #include "utils/type_name/type_name.h"
+#include "utils/traits/traits.h"
+
 using std::string;
 using Rcpp::as;
 using cmdline_arguments::traits::input_types,
       cmdline_arguments::traits::input_types::individual_input_type,
       cmdline_arguments::traits::input_types::vector_input_type,
-      cmdline_arguments::traits::input_types::list_input_type;
+      cmdline_arguments::traits::input_types::list_input_type,
+      cmdline_arguments::utils::type_name;
 
 
 namespace cmdline_arguments::utils{
@@ -27,12 +28,20 @@ namespace cmdline_arguments::utils{
   // this is the thing that's happening. It is throwing this error.
   template<typename T>
   input_types convert_type(T);
-
-  template<>
-  input_types convert_type<string>(string);
-
+  template<typename T>
+  input_types convert_type(T, string);
   template<>
   input_types convert_type<SEXP>(SEXP);
+  template<>
+  input_types convert_type<SEXP>(SEXP, string);
+  template<>
+  input_types convert_type<string>(string);
+  template<>
+  input_types convert_type<string>(string, string);
+
+
+
+
 }
 
 #endif
