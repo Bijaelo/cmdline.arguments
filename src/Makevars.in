@@ -1,0 +1,17 @@
+# Default make file
+PKG_CPPFLAGS=-I.
+
+CXX_STD = CXX20
+
+# Include all C++ files in src/ and its subdirectories: src/*
+SOURCES=@SUBDIR_SOURCES@
+
+# Obtain the object files
+OBJECTS=$(SOURCES:.cpp=.o)
+
+# Make the shared object
+all: $(SHLIB) clean
+
+# Provide recipe to remove all objects
+clean:
+	@rm -f $(OBJECTS)

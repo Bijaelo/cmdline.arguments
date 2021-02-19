@@ -1,16 +1,27 @@
 Package: cmdline.arguments
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Flexible and fully customizable commandline tool for R
+ scripting and R based applications
+Version: 0.0.1
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Oliver P.",
+           family = "Madsen",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+           email = "Oliver.p.madsen@gmail.com")
+Description: cmdline.arguments provides an optimized high level interface for parsing commandline arguments intended for scripting. Users of argparse from python will find this interface familiar but more stable than the argparse or argparser package implemented in R. 
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
+Depends:
+    R6 (>= 2.1.0),
+    utils,
+    glue (>= 1.4.2)
+Suggests: 
+    covr,
+    testthat
+LinkingTo: 
+    Rcpp
+Imports: 
+    Rcpp,
+    glue

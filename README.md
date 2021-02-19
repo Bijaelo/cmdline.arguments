@@ -1,4 +1,7 @@
-# README
+<!-- badges: start -->
+[![Codecov test coverage](https://codecov.io/gh/Bijaelo/cmdline.arguments/branch/master/graph/badge.svg)](https://codecov.io/gh/Bijaelo/cmdline.arguments?branch=master)
+<!-- badges: end -->
+# cmdline.arguments
 Welcome to the `cmdline.arguments` package. This package seeks to provide a fully implemented parser for commandline arguments, based on a fork of the [`argparser`][1] package version 0.6 (Thanks djhshih for his package). While several packages such as 
 1. [`argparser`][1]
 1. [`argparse´][2]
@@ -98,22 +101,22 @@ In `cmdline.arguments` the underlying printing methods is based on an [`R6`][16]
 
 When building the `parser` object by default `getOption("cmdline.argparse.helpfun")` is used to create the help message, which creates a single line of input. Overwriting this option will overwrite how all input ( including '--help' ). Overwriting the `print.argument` and `print.parser` functions will let one further customize how these arguments are formatted and combined further.
 
- [1]: https://cran.r-project.org/package=argparser <!-- argparser -->
- [2]: https://cran.r-project.org/package=argparse <!-- argparse -->
- [3]: https://cran.r-project.org/package=docopt <!-- docopt -->
- [4]: https://cran.r-project.org/package=getopt <!-- getopt -->
- [5]: https://cran.r-project.org/package=GetoptLong <!-- GetoptLong -->
- [6]: https://cran.r-project.org/package=littler <!-- littler -->
- [7]: https://cran.r-project.org/package=optigrab <!-- optigrab -->
- [8]: https://cran.r-project.org/package=optparse <!-- optparse --> 
- [9]: https://bitbucket.org/djhshih/argparser/issues/25/unexpected-behaviour-for-optional <!-- argparser issue with custom classes -->
- [10]: https://bitbucket.org/djhshih/argparser/issues/23/argument-type-not-respected-for-multiple <!-- argparser issue with multiple arguments -->
- [11]: https://docs.python.org/3/library/argparse.html <!-- argparse module in python -->
- [12]: https://www.python.org/ <!-- python link -->
- [13]: https://cran.r-project.org/package=reticulate <!-- reticulate cran -->
- [14]: http://adv-r.had.co.nz/S4.html <!-- S4 information -->
- [15]: https://www.rdocumentation.org/packages/methods/versions/3.6.2/topics/as <!-- Link to the as function in R -->
- [16]: https://cran.r-project.org/package=R6 <!-- cran R6 mirror -->
+  [1]: https://cran.r-project.org/package=argparser <!-- argparser -->
+  [2]: https://cran.r-project.org/package=argparse <!-- argparse -->
+  [3]: https://cran.r-project.org/package=docopt <!-- docopt -->
+  [4]: https://cran.r-project.org/package=getopt <!-- getopt -->
+  [5]: https://cran.r-project.org/package=GetoptLong <!-- GetoptLong -->
+  [6]: https://cran.r-project.org/package=littler <!-- littler -->
+  [7]: https://cran.r-project.org/package=optigrab <!-- optigrab -->
+  [8]: https://cran.r-project.org/package=optparse <!-- optparse --> 
+  [9]: https://bitbucket.org/djhshih/argparser/issues/25/unexpected-behaviour-for-optional <!-- argparser issue with custom classes -->
+  [10]: https://bitbucket.org/djhshih/argparser/issues/23/argument-type-not-respected-for-multiple <!-- argparser   ssue with multiple arguments -->
+  [11]: https://docs.python.org/3/library/argparse.html <!-- argparse module in python -->
+  [12]: https://www.python.org/ <!-- python link -->
+  [13]: https://cran.r-project.org/package=reticulate <!-- reticulate cran -->
+  [14]: http://adv-r.had.co.nz/S4.html <!-- S4 information -->
+  [15]: https://www.rdocumentation.org/packages/methods/versions/3.6.2/topics/as <!-- Link to the as function in R -->
+  [16]: https://cran.r-project.org/package=R6 <!-- cran R6 mirror -->
  
  
  
