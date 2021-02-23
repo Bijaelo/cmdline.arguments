@@ -30,7 +30,7 @@ namespace cmdline_arguments::parser::argument{
     (this -> data).insert(this -> data.end(), rhs.begin(), rhs.end());
   }
   ArgumentList raw_argument::digest() const{
-    ArgumentList o;
+    List o;
     // Just a quick wrapper for data output.
     // We always return a list, so parse_func can use VECTOR_ELT(vec, 0)
     // to extract the element.
@@ -40,19 +40,19 @@ namespace cmdline_arguments::parser::argument{
         break;
       case vector_input_type:
         if(this -> outputName == R_NilValue)
-          o = ArgumentList::create(wrap(this -> data));
+          o = List::create(wrap(this -> data));
         else
-          o = ArgumentList::create(Rcpp::Named(this -> outputName) = wrap(this -> data));
+          o = List::create(Rcpp::Named(this -> outputName) = wrap(this -> data));
         break;
       case list_input_type:
         List x(wrap(this -> data));
         if(this -> outputName == R_NilValue)
-          o = ArgumentList::create(x);
+          o = List::create(x);
         else
-          o = ArgumentList::create(Rcpp::Named(this -> outputName) = x);
+          o = List::create(Rcpp::Named(this -> outputName) = x);
         break;
     }
-    return o;
+    return ArgumentList(o);
   }
 }
 

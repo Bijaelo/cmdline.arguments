@@ -24,44 +24,36 @@
 #ifndef cmdline_pairlist
 #define cmdline_pairlist
 
-#include "RcppApi/ArgumentList.h"
+#include "utils/ArgumentList.h"
 #include <Rcpp.h>
 #include <Rinternals.h>
 
 namespace Rcpp{
-  inline SEXP pairlist(const Rcpp::ArgumentList& t1){
+  template<>
+  inline SEXP pairlist(const cmdline_arguments::utils::ArgumentList& t1){
     // code mostly taken from do_docall
     // Not sure why this one is complaining about it not being a union type?
-    R_xlen_t n = t1.size();
-    SEXP c, tail;
-    PROTECT(c = tail = Rf_allocList(n));
-    // t1.names() might return R_NilValue making Shield<SEXP> ambigous
-    const CharacterVector names(t1.names());
-    Rcpp::ArgumentList::const_iterator ti = t1.begin();
-    CharacterVector::const_iterator ni = names.begin();
-    // PROTECT might be unnecessary, as attr are stored as Shield<SEXP>?
-    if(names.size() == 0){
-      for(R_xlen_t i = 0; i < n; i++, ti++, ni++){
-        SETCAR(c, *ti);
-        c = CDR(c);
+    Rcpp::List data = t1.data;
+    R_xlen_t n = data.size();
+    SEXP tail, walker;
+    PROTECT(tail = walker = Rf_allocList(n));
+    SEXP names = data.names();
+    if(Rf_length(names) == 0){
+      for(R_xlen_t i = 0; i < n; i++){
+        SETCAR(walker, data[i]);
+        walker = CDR(walker);
       }
     }else{
-      for(R_xlen_t i = 0; i < n; i++, ti++, ni++){
-        SETCAR(c, *ti);
-        // PROTECT not needed here
-        SEXP namei = *ni;
-        // Test for NULL and nullstring.
+      for(R_xlen_t i = 0; i < n; i++){
+        SETCAR(walker, data[i]);
+        SEXP namei = STRING_ELT(names, i);
         if(namei != R_NilValue && CHAR(namei)[0] != '\0')
-          SET_TAG(c, Rf_installTrChar(namei));
-        c = CDR(c);
+          SET_TAG(walker, Rf_installTrChar(namei));
+        walker = CDR(walker);
       }
     }
     UNPROTECT(1);
-    return(tail);
-  };/*
-  SEXP pairlist( const Rcpp::List& t1 ){
-    return grow( t1, R_NilValue ) ;
-  }*/
-
+    return tail;
+  };
 }
 #endif

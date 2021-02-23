@@ -8,10 +8,10 @@
 #include <Rcpp.h>
 #include "utils/converters/converters.h"
 #include "utils/traits/traits.h"
-#include "RcppApi/ArgumentList.h"
+#include "utils/ArgumentList.h"
 
 using Rcpp::wrap, Rcpp::as, Rcpp::List,
-      Rcpp::CharacterVector, Rcpp::Shield, Rcpp::ArgumentList;
+      Rcpp::CharacterVector, Rcpp::Shield;
 
 using std::string, std::vector, std::list;
 
@@ -19,7 +19,8 @@ using cmdline_arguments::traits::input_types,
       cmdline_arguments::traits::input_types::individual_input_type,
       cmdline_arguments::traits::input_types::vector_input_type,
       cmdline_arguments::traits::input_types::list_input_type,
-      cmdline_arguments::utils::convert_type;
+      cmdline_arguments::utils::convert_type,
+      cmdline_arguments::utils::ArgumentList;
 
 // Simple wrapper for containing a set of raw arguments
 // Handles storage and returning argument correctly to parse_func.
