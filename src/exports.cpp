@@ -10,6 +10,9 @@
 #include "utils/type_name/type_name.h"
 #include "utils/converters/converters.h"
 #include "parser/argument/raw_argument.h"
+#include "RcppApi/ArgumentList.h"
+#include "RcppApi/pairlist.h"
+#include "parser/pfunc/pfunc.h"
 
 using Rcpp::XPtr,
   Rcpp::as,
@@ -84,11 +87,11 @@ extern "C" {
     END_RCPP
   }
 
-  SEXP _raw_argument(SEXP type, SEXP name, SEXP data){
+  SEXP _raw_argument(SEXP type, SEXP name, SEXP data, SEXP outputName = R_NilValue){
     BEGIN_RCPP
     string t = as<string>(type), n = as<string>(name);
-
-    XPtr<raw_argument> obj(new raw_argument(t, n, as<vector<string>>(data)));
+    Rcpp::String on = as<Rcpp::String>(outputName);
+    XPtr<raw_argument> obj(new raw_argument(t, n, as<vector<string>>(data), on));
     return obj;
     END_RCPP
   }
@@ -110,7 +113,57 @@ extern "C" {
     return obj -> digest();
     END_RCPP
   }
-
+  SEXP do_call(SEXP fun, SEXP args){
+    BEGIN_RCPP
+    Rcpp::Function f(fun);
+    Rcpp::ArgumentList a;
+    a = Rcpp::as<Rcpp::ArgumentList>(args);
+    return f(a);
+    END_RCPP
+  }
+  SEXP do_call2(SEXP fun, SEXP args){
+    BEGIN_RCPP
+    Rcpp::Function f(fun);
+    Rcpp::List a(args);
+    return f(a);
+    END_RCPP
+  }
+  SEXP do_call3(SEXP fun, SEXP args){
+    BEGIN_RCPP
+    Rcpp::Function f(Rcpp::as<std::string>(fun));
+    Rcpp::ArgumentList a(args);
+    return f(a);
+    END_RCPP
+  }
+  SEXP make_args(SEXP args){
+    BEGIN_RCPP
+    Rcpp::ArgumentList a;
+    a = Rcpp::as<Rcpp::ArgumentList>(args);
+    return (a);
+    END_RCPP
+  }
+  SEXP make_pfunc(SEXP fun, SEXP args, SEXP name){
+    BEGIN_RCPP
+    using namespace cmdline_arguments::parser;
+    XPtr<parserFunction> ptr(new parserFunction(Rcpp::as<Rcpp::Function>(fun), Rcpp::as<string>(name), Rcpp::as<ArgumentList>(args)));
+    return ptr;
+    END_RCPP
+  }
+  SEXP make_pfunc_argless(SEXP fun, SEXP name){
+    BEGIN_RCPP
+    using namespace cmdline_arguments::parser;
+    XPtr<parserFunction> ptr(new parserFunction(Rcpp::as<Rcpp::Function>(fun), Rcpp::as<string>(name)));
+    return ptr;
+    END_RCPP
+  }
+  // Need to execute with more args
+  SEXP exec_pfunc(SEXP pfunc, SEXP args){
+    BEGIN_RCPP
+    using namespace cmdline_arguments::parser;
+    XPtr<parserFunction> ptr(pfunc);
+    return ptr -> operator()(Rcpp::as<ArgumentList>(args));
+    END_RCPP
+  }
 }
 
 
@@ -137,7 +190,13 @@ static const R_CallMethodDef CallEntries[] = {
   {"raw_argument_create", (DL_FUNC) &_raw_argument, 3},
   {"raw_argument_add", (DL_FUNC) &_raw_argument_add, 2},
   {"raw_argument_digest", (DL_FUNC) &_raw_argument_digest, 1},
-
+  {"do_call", (DL_FUNC) &do_call, 2},
+  {"do_call2", (DL_FUNC) &do_call2, 2},
+  {"do_call3", (DL_FUNC) &do_call3, 2},
+  {"make_args", (DL_FUNC) &make_args, 1},
+  {"make_pfunc", (DL_FUNC) &make_pfunc, 3},
+  {"make_pfunc_argless", (DL_FUNC) &make_pfunc_argless, 2},
+  {"exec_pfunc", (DL_FUNC) &exec_pfunc, 2},
   {NULL, NULL, 0}
 };
 
@@ -146,3 +205,12 @@ extern "C" void R_init_cmdline_arguments(DllInfo *dll) {
   R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
   R_useDynamicSymbols(dll, (Rboolean)FALSE);
 }
+/*
+ undefined reference to
+ cmdline_arguments::parser::parserFunction::parserFunction
+ <Rcpp::Function_Impl
+  <Rcpp::PreserveStorage>, std::__cxx11::basic_string<char, std::char_traits<char>,
+  std::allocator<char>
+ >,
+ Rcpp::ArgumentList_Impl<19, Rcpp::PreserveStorage> >(Rcpp::Function_Impl<Rcpp::PreserveStorage>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, Rcpp::ArgumentList_Impl<19, Rcpp::PreserveStorage>)
+ */

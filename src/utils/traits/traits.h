@@ -5,6 +5,8 @@
 // Traits
 // Abuse the definition used in Rcpp
 #include <Rcpp/traits/integral_constant.h>
+#include <string>
+#include <Rcpp.h>
 using std::string, std::vector;
 using Rcpp::List, Rcpp::CharacterVector, Rcpp::wrap;
 namespace cmdline_arguments::traits{

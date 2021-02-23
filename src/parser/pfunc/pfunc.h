@@ -6,20 +6,24 @@
 
 
 #include "utils/traits/traits.h"
+#include "RcppApi/ArgumentList.h"
 //#include "utils/converters/converters.h"
 using std::string;
-using Rcpp::List, Rcpp::stop, Rcpp::Shield, Rcpp::Function;
-using namespace cmdline_arguments::traits;
+using Rcpp::List, Rcpp::stop, Rcpp::Function, Rcpp::ArgumentList;
+using namespace cmdline_arguments::traits; // for  types.
+
+using cci = CharacterVector::const_iterator;
+using aci = ArgumentList::const_iterator;
 /* Parser function implementation
  *
  * Implemented as a thin layer on top of the Rcpp::Function implementation.
  * Main differences:
  * Constructor allows for 2 additional parameters: name (string) and args
  * (SEXP/List), pass_as_name (string).
- * parser_Function requires a typename specification (a trait).
+ * parserFunction requires a typename specification (a trait).
  * This mainly handles how arguments are passed to func. This can be one of:
  * - individual_input: arguments pass via operator(std::vector<std::string>)
- *   are passed as individual arguments from position 1 to k.
+ *   are passed as individual arguments from position 1 to k.f
  * - vector_input: arguments are passed as a CharacterVector
  * - list_input: arguments are passed as a list of individual components in position K.
  * pass_as_name (optional) allows for optional naming of argument passed via
@@ -32,22 +36,116 @@ namespace cmdline_arguments::parser{
 
   // The following 3 implementation have the same constructors (shame on me)
   // but the actual method needs to be different
-
-  class parser_Function{
+  class parserFunction{
   public:
-    parser_Function(string, string);
-    parser_Function(string, string, SEXP);
-    parser_Function(string, string, List);
-    parser_Function(string, string, SEXP, string);
-    parser_Function(string, string, List, string);
+    // Need constructors for
+    // 1: function, name
+    // 2: function, args, name
+
+    // function, Name
+    template<typename T, typename S>
+    parserFunction(T fun, S _name):
+      name(_name), func(fun), args(List::create()){ }
+    // function, name, arguments
+    template<typename T, typename S, typename U>
+    parserFunction(T fun, S _name, U _args):
+      name(_name), func(fun), args(_args){ }
+
+
 
     template<typename T>
-    bool operator()();
+    SEXP operator()(const T& rawArgs){
+      const List rawArgsList(rawArgs);
+      R_xlen_t rawSize = rawArgsList.size(),
+        argSize = (this -> args).size(),
+        tot = rawSize + argSize;
+      if(rawSize > 0){
+        // we have at least 1 argument to pass
+        List combined(tot);
+        CharacterVector names(tot),
+          rawNames(rawArgs.names()),
+          args_names((this -> args).names());
+        List::iterator combined_Iterator = combined.begin();
+        CharacterVector::iterator names_Iterator = names.begin();
+
+        List::const_iterator rawBegin = rawArgsList.begin(), rawEnd = rawArgsList.end();
+        AppendArguments(combined_Iterator, names_Iterator,
+                   rawBegin, rawEnd,
+                   rawNames.cbegin(), rawNames.size());
+
+        List::const_iterator argsBegin = (Rcpp::as<List>(this -> args)).begin(),
+              argsEnd = (Rcpp::as<list>(this -> args)).end();
+        AppendArguments(combined_Iterator, names_Iterator,
+                   argsBegin, argsEnd,
+                   args_names.cbegin(), args_names.size());
+        /*
+        // Fill in name and the combine ArguentList
+        // We start with the rawArgs, as they should come first.
+        List::const_iterator
+          Start = rawArgsList.cbegin(), End = rawArgsList.cend(),
+            combined_Iterator = combined.cbegin();
+
+        CharacterVector Names = rawArgsList.names();
+        CharacterVector::const_iterator names_Iterator = names.cbegin(),
+          NStart = Names.cbegin();
+        R_xlen_t ni = Names.size();
+        for(; Start != End; Start++, combined_Iterator++){
+          *combined_Iterator = *Start;
+          // append names if present
+          if(ni > 0){
+            if((*NStart) != R_NilValue && CHAR((*NStart))[0] != '\0')
+              *names_Iterator = *NStart;
+            NStart++;
+          }
+        }
+        // then append the remaining args.
+        Names = (this -> args).names();
+        ni = Names.size();
+        //NStart = Names.cbegin();
+        //Start = (this -> args).cbegin();
+        //End = (this -> args).cend();
+        // Really should place this into a separate function.
+        // Maybe after I'm sure it works as expected
+        for(; Start != End; Start++, combined_Iterator++){
+          *combined_Iterator = *Start;
+          // append names if present
+          if(ni > 0){
+            if((*NStart) != R_NilValue && CHAR((*NStart))[0] != '\0')
+              *names_Iterator = *NStart;
+            NStart++;
+          }
+        }
+        */
+        combined.attr("names") = names;
+        return (this -> func)(Rcpp::as<ArgumentList>(combined));
+      }else // No args provided, just execute the f unction.
+        if(argSize > 0) return (this -> func)(this -> args);
+        else return(this -> func)();
+    }
 
   private:
-    string name;
-    Function func;
-    Shield<SEXP> args, pass_as_name;
+    const string name;
+    const Function func;
+    const List args;
+    void const AppendArguments(List::iterator& outputArgs,
+                                CharacterVector::iterator& outputNames,
+                                List::const_iterator& Start,
+                                List::const_iterator& End,
+                                CharacterVector::const_iterator& names,
+                                R_xlen_t namesLength){
+      // Implement the for loop above, as to avoid "other.proxy" error occuring.
+      for(; Start != End; Start++, outputArgs++, outputNames++){
+        *outputArgs = *Start;
+        if(namesLength > 0){
+          // This fucks up a bit.
+          if((*names) != "" && (*names) != nullptr){
+            *outputNames = *names;
+          }
+          names++;
+        }
+      }
+    }
+
   };
 
 
@@ -65,7 +163,7 @@ namespace cmdline_arguments::parser{
   *
   * At this point it becomes extremely simple to actually handle calling the
   * function.
-  * We simple call parser_Function x; x(args.getdata());
+  * We simple call parserFunction x; x(args.getdata());
   * And that should simply return data.
   *
   *
