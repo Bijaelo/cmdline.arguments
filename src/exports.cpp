@@ -133,9 +133,8 @@ extern "C" {
     BEGIN_RCPP
     Rcpp::Function f(fun);
     Rcpp::List a = as<List>(args1), b = as<List>(args2);
-    cmdline_arguments::parser::parserFunction pf(fun, "test", a);
-    pf(b);
-    return wrap(true);
+    cmdline_arguments::parser::parserFunction pf(fun, a);
+    return pf(b);
     END_RCPP
   }
 

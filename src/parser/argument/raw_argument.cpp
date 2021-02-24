@@ -40,7 +40,7 @@ namespace cmdline_arguments::parser::argument{
         break;
       case vector_input_type:
         if(this -> outputName == R_NilValue)
-          o = List::create(wrap(this -> data));
+            o = List::create(wrap(this -> data));
         else
           o = List::create(Rcpp::Named(this -> outputName) = wrap(this -> data));
         break;

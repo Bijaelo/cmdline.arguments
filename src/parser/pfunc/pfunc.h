@@ -21,15 +21,13 @@ namespace cmdline_arguments::parser{
   public:
 
     // function, Name
-    template<typename T, typename S>
-    parserFunction(T fun, S _name):
-      name(_name), func(fun), args(List::create()){ }
+    template<typename T>
+    parserFunction(T fun):
+      func(fun), args(List::create()){ }
     // function, name, arguments
-    template<typename T, typename S, typename U>
-    parserFunction(T fun, S _name, U _args):
-      name(_name), func(fun), args(_args){ }
-
-
+    template<typename T, typename U>
+    parserFunction(T fun, U _args):
+      func(fun), args(_args){ }
 
     template<typename T>
     SEXP operator()(const T& rawArgs){
@@ -38,6 +36,7 @@ namespace cmdline_arguments::parser{
       ArgumentList fullArgs(ra);
       return (this -> func)(fullArgs);
     };
+    // This does not seem to be doing anything?
     template<typename T>
     SEXP operator()(){
       ArgumentList fullArgs(this -> args);
@@ -46,7 +45,6 @@ namespace cmdline_arguments::parser{
 
 
   private:
-    const string name;
     const Function func;
     const List args;
 
