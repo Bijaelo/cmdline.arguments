@@ -1,0 +1,6 @@
+
+// Changelog
+
+  * 2021-03-01 - Oliver P. Madsen
+  Reimplemented "utils/matching.h" and "utils/matching.c" in "parser/argument_locator.h".
+  This new implementation no longer has knowledge of the different flags, but only the flag indicators. It finds all flags and has a "pop" and "get" method for extracting flags. "pop" removes the element while "get" returns without removing the element. If the element does not exist an empty list of vectors is returned. (So calling pop twice may yield different results). This completes the first version of the "bones".

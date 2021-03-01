@@ -13,6 +13,8 @@
 
 #include "parser/pfunc/pfunc.h"
 
+#include "parser/argument_locator.h"
+
 #include "printer/printer.h"
 #include <map>
 using Rcpp::XPtr,
@@ -187,6 +189,25 @@ extern "C" {
     END_RCPP
   }
 
+  SEXP argument_locator_test(SEXP args, SEXP flags){
+    BEGIN_RCPP
+    vector<string> vargs = as<vector<string>>(args),
+      vflags = as<vector<string>>(flags);
+
+    cmdline_arguments::parser::argument_locator loc(vargs, vflags);
+    List out;
+    loc.printkeys();
+    out["first"] = loc.pop("-f");
+    out["second"] = loc.get("--f");
+    out["fourth"] = loc.get("--g");
+    out["third"] = loc.get("positionals");
+    return wrap(out);
+
+    return wrap(R_NilValue);
+    END_RCPP
+  }
+
+
 }
 
 
@@ -218,6 +239,7 @@ static const R_CallMethodDef CallEntries[] = {
   {"execute_pfunc", (DL_FUNC) &execute_pfunc, 3},
   {"print_external", (DL_FUNC) &print_something_external, 2},
   {"print_internal", (DL_FUNC) &print_something_internal, 2},
+  {"argument_locator_test", (DL_FUNC) &argument_locator_test, 2},
   // {"do_call2", (DL_FUNC) &do_call2, 2},
   // {"do_call3", (DL_FUNC) &do_call3, 2},
   //{"make_pfunc", (DL_FUNC) &make_pfunc, 3},
