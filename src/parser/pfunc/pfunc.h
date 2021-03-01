@@ -6,74 +6,83 @@
 
 
 #include "utils/traits/traits.h"
+#include "utils/ArgumentList.h"
 //#include "utils/converters/converters.h"
 using std::string;
-using Rcpp::List, Rcpp::stop, Rcpp::Shield, Rcpp::Function;
-using namespace cmdline_arguments::traits;
-/* Parser function implementation
- *
- * Implemented as a thin layer on top of the Rcpp::Function implementation.
- * Main differences:
- * Constructor allows for 2 additional parameters: name (string) and args
- * (SEXP/List), pass_as_name (string).
- * parser_Function requires a typename specification (a trait).
- * This mainly handles how arguments are passed to func. This can be one of:
- * - individual_input: arguments pass via operator(std::vector<std::string>)
- *   are passed as individual arguments from position 1 to k.
- * - vector_input: arguments are passed as a CharacterVector
- * - list_input: arguments are passed as a list of individual components in position K.
- * pass_as_name (optional) allows for optional naming of argument passed via
- *   operator(). This is currently only viable option for specifying argument
- *   position outside of naming all other arguments passed in args.
- */
+using Rcpp::List, Rcpp::stop, Rcpp::Function;
+using cmdline_arguments::utils::ArgumentList;
 
 namespace cmdline_arguments::parser{
 
 
   // The following 3 implementation have the same constructors (shame on me)
   // but the actual method needs to be different
-
-  class parser_Function{
+  class parserFunction{
   public:
-    parser_Function(string, string);
-    parser_Function(string, string, SEXP);
-    parser_Function(string, string, List);
-    parser_Function(string, string, SEXP, string);
-    parser_Function(string, string, List, string);
+
+    // function, Name
+    template<typename T>
+    parserFunction(T fun):
+      func(fun), args(List::create()){ }
+    // function, name, arguments
+    template<typename T, typename U>
+    parserFunction(T fun, U _args):
+      func(fun), args(_args){ }
 
     template<typename T>
-    bool operator()();
+    SEXP operator()(const T& rawArgs){
+      List ra = as<List>(wrap(rawArgs));
+      ra = appendList(ra);
+      ArgumentList fullArgs(ra);
+      return (this -> func)(fullArgs);
+    };
+    // This does not seem to be doing anything?
+    template<typename T>
+    SEXP operator()(){
+      ArgumentList fullArgs(this -> args);
+      return (this -> func)(fullArgs);
+    }
 
   private:
-    string name;
-    Function func;
-    Shield<SEXP> args, pass_as_name;
+    const Function func;
+    const List args;
+
+    // 2 functions for appending. But one will be taken care of by operator()(const T&)
+    inline void insertList(List::iterator& start, CharacterVector::iterator& Nstart,
+                           const List& data, R_xlen_t& n) const {
+      SEXP names = data.names();
+      if(Rf_length(names) == 0){
+        for(R_xlen_t i = 0; i < n; i++, start++)
+          *start = data[i];
+        Nstart = Nstart + n;
+      }else{
+        for(R_xlen_t i = 0; i < n; i++, start++, Nstart++){
+          *start = data[i];
+          SEXP namei = STRING_ELT(names, i);
+          if(namei != R_NilValue){
+            *Nstart = namei;
+          }
+        }
+      }
+    }
+    // Not how we'll do it, as we have args stored.
+    inline SEXP appendList(const List& rawArgs) const {
+      BEGIN_RCPP
+      R_xlen_t rawSize = rawArgs.size(),
+        argsSize = (this -> args).size(),
+        totalSize = rawSize + argsSize;
+      List res(totalSize);
+      CharacterVector resNames(totalSize);
+      auto it = res.begin();
+      auto ni = resNames.begin();
+      insertList(it, ni, rawArgs, rawSize);
+      insertList(it, ni, this -> args, argsSize);
+      res.attr("names") = resNames;
+      return res;
+      END_RCPP
+    }
+
   };
-
-
- /* Thought 2021-02-17:
-  *
-  * Let individual_input, list_input and vector_input store input
-  * and handle how to extract input.
-  *
-  * So for example:
-  * Vector_inputs has a field called "data".  this field is a raw string.
-  * It also has a getter "getData". data is set using = or (), and can be
-  * extended using += or "x.data = x.data + string"
-  * getData however returns data as either a List or CharacterVector
-  * ready to be added to pairlist. Or maybe even pairlist element itself.
-  *
-  * At this point it becomes extremely simple to actually handle calling the
-  * function.
-  * We simple call parser_Function x; x(args.getdata());
-  * And that should simply return data.
-  *
-  *
-  * We still have probles with how we'll handle "store_const" (if this feature
-  * makes it into the final version) but that is a problem for another day.
-  * This basically will make do_docall much **much** simpler to understand.
-  *
-  */
 }
 
 

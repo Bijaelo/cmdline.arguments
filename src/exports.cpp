@@ -11,6 +11,10 @@
 #include "utils/converters/converters.h"
 #include "parser/argument/raw_argument.h"
 
+#include "parser/pfunc/pfunc.h"
+
+#include "printer/printer.h"
+#include <map>
 using Rcpp::XPtr,
   Rcpp::as,
   Rcpp::wrap;
@@ -84,11 +88,11 @@ extern "C" {
     END_RCPP
   }
 
-  SEXP _raw_argument(SEXP type, SEXP name, SEXP data){
+  SEXP _raw_argument(SEXP type, SEXP name, SEXP data, SEXP outputName = R_NilValue){
     BEGIN_RCPP
     string t = as<string>(type), n = as<string>(name);
-
-    XPtr<raw_argument> obj(new raw_argument(t, n, as<vector<string>>(data)));
+    Rcpp::String on = as<Rcpp::String>(outputName);
+    XPtr<raw_argument> obj(new raw_argument(t, n, as<vector<string>>(data), on));
     return obj;
     END_RCPP
   }
@@ -107,7 +111,79 @@ extern "C" {
   SEXP _raw_argument_digest(SEXP ptr){
     BEGIN_RCPP
     XPtr<raw_argument> obj(ptr);
-    return obj -> digest();
+    return (obj -> digest()).data;
+    END_RCPP
+  }
+  SEXP do_call(SEXP fun, SEXP args){
+    BEGIN_RCPP
+    Rcpp::Function f(fun);
+    Rcpp::List a = Rcpp::as<List>(args);
+    cmdline_arguments::utils::ArgumentList aa(a);
+    return f(aa);
+    END_RCPP
+  }
+  SEXP do_call2(SEXP fun, SEXP args){
+    BEGIN_RCPP
+    Rcpp::Function f(fun);
+    Rcpp::List a = Rcpp::as<List>(args);
+    cmdline_arguments::utils::ArgumentList aa(a);
+    return aa.data;
+    END_RCPP
+  }
+  SEXP execute_pfunc(SEXP fun, SEXP args1, SEXP args2){
+    BEGIN_RCPP
+    Rcpp::Function f(fun);
+    Rcpp::List a = as<List>(args1), b = as<List>(args2);
+    cmdline_arguments::parser::parserFunction pf(fun, a);
+    return pf(b);
+    END_RCPP
+  }
+
+  /*
+  SEXP make_pfunc(SEXP fun, SEXP args, SEXP name){
+    BEGIN_RCPP
+    using namespace cmdline_arguments::parser;
+    XPtr<parserFunction> ptr(new parserFunction(Rcpp::as<Rcpp::Function>(fun), Rcpp::as<string>(name), Rcpp::as<Rcpp::List>(args)));
+    return ptr;
+    END_RCPP
+  }
+  SEXP make_pfunc_argless(SEXP fun, SEXP name){
+    BEGIN_RCPP
+    using namespace cmdline_arguments::parser;
+    XPtr<parserFunction> ptr(new parserFunction(Rcpp::as<Rcpp::Function>(fun), Rcpp::as<string>(name)));
+    return ptr;
+    END_RCPP
+  }
+  // Need to execute with more args
+  SEXP exec_pfunc(SEXP pfunc, SEXP args){
+    BEGIN_RCPP
+    using namespace cmdline_arguments::parser;
+    XPtr<parserFunction> ptr(pfunc);
+    return ptr -> operator()(Rcpp::as<List>(args));
+    END_RCPP
+  }*/
+  SEXP print_something_internal(SEXP values, SEXP msg){
+    BEGIN_RCPP
+    std::vector<string> vals = as<std::vector<string>>(values);
+    std::vector<string> nams = as<std::vector<string>>(Rf_getAttrib(values, R_NamesSymbol));
+    std::map<string, string> ma = {};
+    for(size_t i = 0; i < vals.size(); i++){
+      ma[nams[i]] = vals[i];
+    }
+    cmdline_arguments::printer::printer pr(as<string>(msg), "", "");
+    pr.print(ma);
+    END_RCPP
+  }
+  SEXP print_something_external(SEXP values, SEXP fun){
+    BEGIN_RCPP
+    std::vector<string> vals = as<std::vector<string>>(values);
+    std::vector<string> nams = as<std::vector<string>>(Rf_getAttrib(values, R_NamesSymbol));
+    std::map<string, string> ma = {};
+    for(size_t i = 0; i < vals.size(); i++){
+      ma[nams[i]] = vals[i];
+    }
+    cmdline_arguments::printer::printer pr(as<Function>(fun));
+    pr.print(ma);
     END_RCPP
   }
 
@@ -137,7 +213,16 @@ static const R_CallMethodDef CallEntries[] = {
   {"raw_argument_create", (DL_FUNC) &_raw_argument, 3},
   {"raw_argument_add", (DL_FUNC) &_raw_argument_add, 2},
   {"raw_argument_digest", (DL_FUNC) &_raw_argument_digest, 1},
-
+  {"do_call", (DL_FUNC) &do_call, 2},
+  {"do_call2", (DL_FUNC) &do_call2, 2},
+  {"execute_pfunc", (DL_FUNC) &execute_pfunc, 3},
+  {"print_external", (DL_FUNC) &print_something_external, 2},
+  {"print_internal", (DL_FUNC) &print_something_internal, 2},
+  // {"do_call2", (DL_FUNC) &do_call2, 2},
+  // {"do_call3", (DL_FUNC) &do_call3, 2},
+  //{"make_pfunc", (DL_FUNC) &make_pfunc, 3},
+  // {"make_pfunc_argless", (DL_FUNC) &make_pfunc_argless, 2},
+  // {"exec_pfunc", (DL_FUNC) &exec_pfunc, 2},
   {NULL, NULL, 0}
 };
 
@@ -146,3 +231,12 @@ extern "C" void R_init_cmdline_arguments(DllInfo *dll) {
   R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
   R_useDynamicSymbols(dll, (Rboolean)FALSE);
 }
+/*
+ undefined reference to
+ cmdline_arguments::parser::parserFunction::parserFunction
+ <Rcpp::Function_Impl
+  <Rcpp::PreserveStorage>, std::__cxx11::basic_string<char, std::char_traits<char>,
+  std::allocator<char>
+ >,
+ Rcpp::ArgumentList_Impl<19, Rcpp::PreserveStorage> >(Rcpp::Function_Impl<Rcpp::PreserveStorage>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, Rcpp::ArgumentList_Impl<19, Rcpp::PreserveStorage>)
+ */

@@ -5,26 +5,15 @@
 
 namespace cmdline_arguments::parser{
 
-  // Calling operator() with only type specifier returns whether the type can
-  // be used as input.
-  // Maybe I'll actually change the template, so that it can "store" values.
-  // That way it would itself be a container for
-  template<typename T>
-  bool parser_Function::operator()(){
-    return false;
-  };
-  template<>
-  bool parser_Function::operator()<individual_input>(){
-    return true;
-  };
-  template<>
-  bool parser_Function::operator()<vector_input>(){
-    return true;
-  };
-  template<>
-  bool parser_Function::operator()<list_input>(){
-    return true;
-  };
+
+  // template<typename T, typename S>
+  // parserFunction::parserFunction(T fun, S _name):
+  //   name(_name), func(fun), args(ArgumentList::create()){ }
+  //
+  // template<typename T, typename S, typename U>
+  // parserFunction::parserFunction(T fun, S _name, U _args):
+  //   name(_name), func(fun), args(_args){ }
+
 
 
 }

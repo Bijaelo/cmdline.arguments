@@ -1,10 +1,13 @@
 
 
-#ifndef cmdline_traits
-#define cmdline_traits
+#ifndef cmdline_arguments_traits_h
+#define cmdline_arguments_traits_h
 // Traits
 // Abuse the definition used in Rcpp
 #include <Rcpp/traits/integral_constant.h>
+#include <string>
+#include <vector>
+#include <Rcpp.h>
 using std::string, std::vector;
 using Rcpp::List, Rcpp::CharacterVector, Rcpp::wrap;
 namespace cmdline_arguments::traits{
@@ -16,28 +19,8 @@ namespace cmdline_arguments::traits{
     vector_input_type = 1,
     list_input_type = 2
   } input_types;
-
-  /* Base template (extended from integral_constant).
-   *
-   * Only aware that it has "data". This is a partial definition, "parse"
-   * is specialized outside the body.
-   *
-   * Usages:
-   * [definition name] x(data);
-   * auto y = x.parse();
-   * x += more_data;
-   * x.parse();
-   *
-   * [definition name] x;
-   * x = data;
-   * auto y = x.parse();
-   *
-   * Still needs testing:
-   * input_type::parse()
-   * input_type::operator()
-   * input_type::operator(ini)
-   * input_type::operator+=)
-   * input_type::operator==
+  /* input_type class is currently not used.
+   * Was meant as a try-out for trait programming, but turned out to be useless.
    */
   template <typename _T, _T _V, typename _TD, typename _D>
   struct input_type{

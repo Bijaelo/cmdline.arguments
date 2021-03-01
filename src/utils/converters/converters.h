@@ -24,7 +24,6 @@ using cmdline_arguments::traits::input_types,
 namespace cmdline_arguments::utils{
 
   // Standard behaviour: Throw error if we dont know the specific type.
-
   // this is the thing that's happening. It is throwing this error.
   template<typename T>
   input_types convert_type(T);
@@ -38,9 +37,6 @@ namespace cmdline_arguments::utils{
   input_types convert_type<string>(string);
   template<>
   input_types convert_type<string>(string, string);
-
-
-
 
 }
 
