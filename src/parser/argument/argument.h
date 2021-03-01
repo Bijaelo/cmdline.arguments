@@ -15,20 +15,33 @@
 #include "parser/narg/narg.h"
 #include "parser/argument/raw_argument.h"
 #include "parser/pfunc/pfunc.h"
+#include "printer/printer.h" // error in wrap here. Not certain why that is at the moment
 using namespace cmdline_arguments::parser;
 using std::string, std::list, std::set, std::greater;
-using Rcpp::Function, Rcpp::RObject, Rcpp::stop;
+using Rcpp::Function, Rcpp::RObject, Rcpp::stop, Rcpp::List, Rcpp::CharacterVector;
+//using cmdline_arguments::printer::printer;
 
 namespace cmdline_arguments::parser::argument{
   class Argument {
-    const narg Narg;
+   const narg Narg;
+    //
     parserFunction pfunc;
-    const string name;
-    const set<string> flags; // <== maybe order will be locale affected. (Only matters if it screws positional arguments)
+
+
+    const string name, action, nargRaw; // action should likely not just be a string ?
+
+    const set<string> flags;
     list<raw_argument> rawArgs;
-    // We don't know the return type of pfunc, so we need to shield it in RObject.
+
+
+
     list<RObject> parsedArgs;
 
+    //help is either string or Function. We'll check upon initialization.
+    const List pArgs;
+    const RObject help;
+
+   void testHelp();
     /* Options:
      * 1) Skal nye argumenter håndteres individuelt eller som en fælles vektor?
      * 2) Hvordan skal argumenterne leveres til pfunc? bliver viderledt til rawArgs.)
@@ -82,20 +95,11 @@ namespace cmdline_arguments::parser::argument{
   public:
     // constructors take copied values not addresses, as this might be the "first" time we store these values.
 
-    // flags, Name, new_argument_count_option, pfunc, pfunc_args, raw_argument_option,
-    Argument(vector<string>, string, string, string, Function, List);
-    Argument(set<string>, string, string, string, Function, List);
-    Argument(string, string, string, string, Function, List);
-
-    void add(const vector<string>&);
-    void add(const string&);
-    void add();
-    // Function called from add, to ensure that we can digest an extra n arguments.
-    // What R_xlen_t n is depends on our new_argument_count_option.
-    bool can_take(R_xlen_t);
-
-    list<RObject> parse();
-
+    // flags, name, action, narg, help, parserFunction, parserArgs
+    template<typename T>
+    Argument(vector<string>, string, string, string, SEXP, T, List);
+    template<typename T>
+    Argument(string, string, string, string, SEXP, T, List);
   };
 }
 

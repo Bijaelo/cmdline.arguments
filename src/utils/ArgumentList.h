@@ -7,7 +7,7 @@
 #ifndef cmdline_arguments_ArgumentList_H
 #define cmdline_arguments_ArgumentList_H
 
-#include <Rcpp.h>
+//#include <Rcpp.h> // <== always included in other files.
 using namespace Rcpp;
 namespace cmdline_arguments::utils{
   class ArgumentList{
@@ -20,4 +20,10 @@ namespace cmdline_arguments::utils{
     List data;
   };
 }
+
+
+// pairlist(ArgumentList) has to be loaded here. Otherwise we throw wrap error.
+// (cannot convert ArgumentList to SEXP)
+#include "RcppApi/pairlist.h"
+
 #endif

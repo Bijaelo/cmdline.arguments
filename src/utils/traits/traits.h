@@ -1,11 +1,12 @@
 
 
-#ifndef cmdline_traits
-#define cmdline_traits
+#ifndef cmdline_arguments_traits_h
+#define cmdline_arguments_traits_h
 // Traits
 // Abuse the definition used in Rcpp
 #include <Rcpp/traits/integral_constant.h>
 #include <string>
+#include <vector>
 #include <Rcpp.h>
 using std::string, std::vector;
 using Rcpp::List, Rcpp::CharacterVector, Rcpp::wrap;

@@ -31,7 +31,7 @@ namespace cmdline_arguments::parser{
 
     template<typename T>
     SEXP operator()(const T& rawArgs){
-      List ra = as<List>(rawArgs);
+      List ra = as<List>(wrap(rawArgs));
       ra = appendList(ra);
       ArgumentList fullArgs(ra);
       return (this -> func)(fullArgs);
@@ -42,7 +42,6 @@ namespace cmdline_arguments::parser{
       ArgumentList fullArgs(this -> args);
       return (this -> func)(fullArgs);
     }
-
 
   private:
     const Function func;

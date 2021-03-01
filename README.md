@@ -1,7 +1,52 @@
-<!-- badges: start -->
-[![Codecov test coverage](https://codecov.io/gh/Bijaelo/cmdline.arguments/branch/master/graph/badge.svg)](https://codecov.io/gh/Bijaelo/cmdline.arguments?branch=master)
-<!-- badges: end -->
-# cmdline.arguments
+# cmdline.arguments, providing a fully fledge commandlien argument parser specialized for R's data structures.
+Welcome to the `cmdline.arguments` package source repo. The home for R's own cmdline argument parser. As of 2021-03-01 this package is still in the early stages of it's development cycle, but once finished the intention is to provide the ultimate experience to the R community.
+
+This package seeks to provide an answer to the problem "I want a standardized parser for commandline arguments for the R software language, allowing to parse **any** and all kinds of arguments to any and all of R's data types". Several packages already attempt to answer this question an fail, while some provide a more minimal solution. In the cmdline.arguments project we seek to not only copy another implementation, but instead let all other implementation inspire the development of this package extending where we find problems that occur in daily production code, to ensure reproducibility and simplicity for the end user, while allowing for more detailed customization for both individual and overall argument parsing. 
+
+The package is developed in R and currently requires C++17 and R-4.0.0 to function. This may change in the future, but is not an overall goal. We are always looking for contributions from experience R and Rcpp users as well as suggestions and bugs from the community so hit right into the issue tab and make your voice known!
+
+# Where are we in the development process before release?
+The development process of cmdline.arguments is an iterative cycle, so any or all of the below described points may changed at any point up till version 1.0.0 (release). So while these do illustrate the release features of the current imagination of the package, do keep this in mind.
+
+- [-] Develope the "bones" of the package 
+  - [x] Implement handling for number of arguments 
+    - [x] Implement and est narg class, handling options 'N', '-N', '+N', '?', '*' and '+'
+  - [x] Implement and test parser function class
+    - [x] Extend `Rcpp::Function::invoke` to handle "given" number of arguments 
+      - Done through extending `Rcpp::pairlist` to use `class ArgumentList`
+    - [x] Implement ArgumentList class 
+    - [x] Test return is identical for `Rcpp::Function` and `do.call` for all input types
+  - [x] Implement container for raw cmdline arguments (strings)
+    - [x] Allow option for passing raw vector as  
+      1. individual parameters, 
+      2. a list with a single vector element
+      3. a character vector
+    - [x] Test and integrate with parser function class
+  - [-] Implement and test commandline locater class
+    - [x] Implement V1 (legacy idea)
+    - [ ] re-implement to comply with the idea of cmdline.arguments V2, raw_arguments and so on.
+  - [ ] Integrate all aspects with the argument and parser class
+- [-] Develope the "meat" of the package
+  - [-] Implement and test Printer class (for help messages)
+    - [x] Implement and test V1
+    - [ ] Allow for "known" help argument across multiple arguments
+  - [ ] Implement Argument class
+    - [ ] Implement Lazy Evaluation
+    - [ ] Allow different handling for `-f a -f b` and `-f a b`
+  - [ ] Implement Parser class 
+    - [ ] Implement Lazy Evaluation
+- [ ] Develope the "skin" (API) of the package 
+  - [ ] Decide upon exact format for the R api
+  - [ ] Implement individual functions for interacting with single Arguments and multiple Arguments (parser class).
+  - [ ] Implement R class for containing the C++ object pointers 
+
+In addition to the checklist above it is intended t
+
+Note that this is not a complete list, and as the package is developed a maintained diagram of the meat and bones will be updated in the drawio folder describing the individual parts in a simplified flowchart.
+
+The intention is that the horizon to finish the above is within the year 2021 and hopefully earlier than this.
+
+<!--
 Welcome to the `cmdline.arguments` package. This package seeks to provide a fully implemented parser for commandline arguments, based on a fork of the [`argparser`][1] package version 0.6 (Thanks djhshih for his package). While several packages such as 
 1. [`argparser`][1]
 1. [`argparse´][2]
@@ -90,7 +135,7 @@ In both [`argparse`][11] in python and [`argparser`][1] it is easy to specify mu
    1. `parser`: the function, class or method used to parse the input argument from commandline.
    1. `arg`: If `parse_argument` has been called the parsed argument, otherwise the raw argument found from `commandArgs`. 
    1. `narg`: Similar to `nargs` in `add_argument`.
-   1. `help` <!-- (Maybe this shouldn't be an R6 object, but instead be created using ) an [`R6`][16] object used to print the help message for the object. -->
+   1. `help` 
 1. The `help` object within each `argument` is a simple method used to build the help message for each specific argument. By default this object builds a message similar to 
 
 ## Customization of --help and messages.
@@ -100,25 +145,4 @@ In `cmdline.arguments` the underlying printing methods is based on an [`R6`][16]
 * `print`: A function called by the `print.help` function, which prints `message`, possible doing some pre-formatting before outputting it to console.
 
 When building the `parser` object by default `getOption("cmdline.argparse.helpfun")` is used to create the help message, which creates a single line of input. Overwriting this option will overwrite how all input ( including '--help' ). Overwriting the `print.argument` and `print.parser` functions will let one further customize how these arguments are formatted and combined further.
-
-  [1]: https://cran.r-project.org/package=argparser <!-- argparser -->
-  [2]: https://cran.r-project.org/package=argparse <!-- argparse -->
-  [3]: https://cran.r-project.org/package=docopt <!-- docopt -->
-  [4]: https://cran.r-project.org/package=getopt <!-- getopt -->
-  [5]: https://cran.r-project.org/package=GetoptLong <!-- GetoptLong -->
-  [6]: https://cran.r-project.org/package=littler <!-- littler -->
-  [7]: https://cran.r-project.org/package=optigrab <!-- optigrab -->
-  [8]: https://cran.r-project.org/package=optparse <!-- optparse --> 
-  [9]: https://bitbucket.org/djhshih/argparser/issues/25/unexpected-behaviour-for-optional <!-- argparser issue with custom classes -->
-  [10]: https://bitbucket.org/djhshih/argparser/issues/23/argument-type-not-respected-for-multiple <!-- argparser   ssue with multiple arguments -->
-  [11]: https://docs.python.org/3/library/argparse.html <!-- argparse module in python -->
-  [12]: https://www.python.org/ <!-- python link -->
-  [13]: https://cran.r-project.org/package=reticulate <!-- reticulate cran -->
-  [14]: http://adv-r.had.co.nz/S4.html <!-- S4 information -->
-  [15]: https://www.rdocumentation.org/packages/methods/versions/3.6.2/topics/as <!-- Link to the as function in R -->
-  [16]: https://cran.r-project.org/package=R6 <!-- cran R6 mirror -->
- 
- 
- 
- 
- 
+-->

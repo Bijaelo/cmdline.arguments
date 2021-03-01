@@ -10,10 +10,11 @@
 #include "utils/type_name/type_name.h"
 #include "utils/converters/converters.h"
 #include "parser/argument/raw_argument.h"
-#include "RcppApi/pairlist.h"
 
 #include "parser/pfunc/pfunc.h"
 
+#include "printer/printer.h"
+#include <map>
 using Rcpp::XPtr,
   Rcpp::as,
   Rcpp::wrap;
@@ -161,6 +162,31 @@ extern "C" {
     return ptr -> operator()(Rcpp::as<List>(args));
     END_RCPP
   }*/
+  SEXP print_something_internal(SEXP values, SEXP msg){
+    BEGIN_RCPP
+    std::vector<string> vals = as<std::vector<string>>(values);
+    std::vector<string> nams = as<std::vector<string>>(Rf_getAttrib(values, R_NamesSymbol));
+    std::map<string, string> ma = {};
+    for(size_t i = 0; i < vals.size(); i++){
+      ma[nams[i]] = vals[i];
+    }
+    cmdline_arguments::printer::printer pr(as<string>(msg), "", "");
+    pr.print(ma);
+    END_RCPP
+  }
+  SEXP print_something_external(SEXP values, SEXP fun){
+    BEGIN_RCPP
+    std::vector<string> vals = as<std::vector<string>>(values);
+    std::vector<string> nams = as<std::vector<string>>(Rf_getAttrib(values, R_NamesSymbol));
+    std::map<string, string> ma = {};
+    for(size_t i = 0; i < vals.size(); i++){
+      ma[nams[i]] = vals[i];
+    }
+    cmdline_arguments::printer::printer pr(as<Function>(fun));
+    pr.print(ma);
+    END_RCPP
+  }
+
 }
 
 
@@ -190,6 +216,8 @@ static const R_CallMethodDef CallEntries[] = {
   {"do_call", (DL_FUNC) &do_call, 2},
   {"do_call2", (DL_FUNC) &do_call2, 2},
   {"execute_pfunc", (DL_FUNC) &execute_pfunc, 3},
+  {"print_external", (DL_FUNC) &print_something_external, 2},
+  {"print_internal", (DL_FUNC) &print_something_internal, 2},
   // {"do_call2", (DL_FUNC) &do_call2, 2},
   // {"do_call3", (DL_FUNC) &do_call3, 2},
   //{"make_pfunc", (DL_FUNC) &make_pfunc, 3},
