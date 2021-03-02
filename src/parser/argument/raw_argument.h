@@ -27,6 +27,7 @@ using cmdline_arguments::traits::input_types,
 namespace cmdline_arguments::parser::argument{
   class raw_argument{
   public:
+    // input_type, name, arguments, outputName
     raw_argument(input_types, string, vector<string>, Rcpp::String);
     raw_argument(string, string, vector<string>, Rcpp::String);
     vector<string> operator()() const;
@@ -36,7 +37,7 @@ namespace cmdline_arguments::parser::argument{
     void add(vector<string> rhs);
     // Return depends on the
     ArgumentList digest() const;
-
+    operator ArgumentList() const;
   private:
     const input_types type;
     const string name;

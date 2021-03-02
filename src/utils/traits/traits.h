@@ -19,6 +19,13 @@ namespace cmdline_arguments::traits{
     vector_input_type = 1,
     list_input_type = 2
   } input_types;
+
+
+  typedef enum{
+    individual = 0,
+    vectors = 1,
+    combine = 2
+  } listOptions;
   /* input_type class is currently not used.
    * Was meant as a try-out for trait programming, but turned out to be useless.
    */

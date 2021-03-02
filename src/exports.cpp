@@ -5,18 +5,19 @@
 #include <Rcpp.h>
 #include <R.h>
 #include <string>
-#include "parser/narg/narg.h"
+#include <map>
 
+
+#include "parser/narg/narg.h"
 #include "utils/type_name/type_name.h"
 #include "utils/converters/converters.h"
 #include "parser/argument/raw_argument.h"
-
 #include "parser/pfunc/pfunc.h"
-
 #include "parser/argument_locator.h"
-
 #include "printer/printer.h"
-#include <map>
+#include "parser/argument/argument.h"
+#include "parser/argument/raw_container.h"
+
 using Rcpp::XPtr,
   Rcpp::as,
   Rcpp::wrap;
@@ -141,14 +142,7 @@ extern "C" {
     END_RCPP
   }
 
-  /*
-  SEXP make_pfunc(SEXP fun, SEXP args, SEXP name){
-    BEGIN_RCPP
-    using namespace cmdline_arguments::parser;
-    XPtr<parserFunction> ptr(new parserFunction(Rcpp::as<Rcpp::Function>(fun), Rcpp::as<string>(name), Rcpp::as<Rcpp::List>(args)));
-    return ptr;
-    END_RCPP
-  }
+
   SEXP make_pfunc_argless(SEXP fun, SEXP name){
     BEGIN_RCPP
     using namespace cmdline_arguments::parser;
@@ -163,7 +157,7 @@ extern "C" {
     XPtr<parserFunction> ptr(pfunc);
     return ptr -> operator()(Rcpp::as<List>(args));
     END_RCPP
-  }*/
+  }
   SEXP print_something_internal(SEXP values, SEXP msg){
     BEGIN_RCPP
     std::vector<string> vals = as<std::vector<string>>(values);
@@ -196,7 +190,6 @@ extern "C" {
 
     cmdline_arguments::parser::argument_locator loc(vargs, vflags);
     List out;
-    loc.printkeys();
     out["first"] = loc.pop("-f");
     out["second"] = loc.get("--f");
     out["fourth"] = loc.get("--g");
@@ -240,9 +233,7 @@ static const R_CallMethodDef CallEntries[] = {
   {"print_external", (DL_FUNC) &print_something_external, 2},
   {"print_internal", (DL_FUNC) &print_something_internal, 2},
   {"argument_locator_test", (DL_FUNC) &argument_locator_test, 2},
-  // {"do_call2", (DL_FUNC) &do_call2, 2},
-  // {"do_call3", (DL_FUNC) &do_call3, 2},
-  //{"make_pfunc", (DL_FUNC) &make_pfunc, 3},
+  // {"make_pfunc", (DL_FUNC) &make_pfunc, 3},
   // {"make_pfunc_argless", (DL_FUNC) &make_pfunc_argless, 2},
   // {"exec_pfunc", (DL_FUNC) &exec_pfunc, 2},
   {NULL, NULL, 0}

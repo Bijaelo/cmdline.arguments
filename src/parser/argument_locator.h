@@ -131,9 +131,9 @@ namespace cmdline_arguments::parser{
      * @param key - A key to "find".
      * @returns a list with vectors of strings.
      *          For example the argument -f passed as "-f a -f a b" would return
-     *          list<vector<string>> {{a}, {a, b}}
+     *          list<vector<string>> {{a}, {a, b}}, but calling pop again would
+     *          return {{}}
      */
-
     inline list<vector<string>> pop(const string& key){
       auto e = argLookup.end(),
         i = argLookup.find(key);
@@ -144,6 +144,13 @@ namespace cmdline_arguments::parser{
       return o;
     }
 
+    /* Get an element from argLookup, removing the element from argLookup
+     *
+     * @param key - A key to "find".
+     * @returns a list with vectors of strings.
+     *          For example the argument -f passed as "-f a -f a b" would return
+     *          list<vector<string>> {{a}, {a, b}}
+     */
     inline list<vector<string>> get(const string& key){
       auto e = argLookup.end(),
         i = argLookup.find(key);
@@ -154,6 +161,19 @@ namespace cmdline_arguments::parser{
     inline list<vector<string>> operator[](const string& key){
       return get(key);
     }
+    /* Test if an element is contained in argLookup
+     *
+     * @param key a key to "find"
+     * @returns bool if key is present, false otherwise
+     */
+    inline bool contains(const string& key){
+#if __cpluplus > 201703L // contains doesn't exist before c++20, and potentially not in some compilers (guarded).
+      return argLookup.contains(key);
+#else
+      return argLookup.count(key) != 0; // because: https://stackoverflow.com/a/15792245/10782538
+#endif
+    }
+
   };
 
 }

@@ -54,5 +54,10 @@ namespace cmdline_arguments::parser::argument{
     }
     return ArgumentList(o);
   }
+
+  // Implicit conversion
+  raw_argument::operator ArgumentList() const{
+    return digest();
+  }
 }
 
