@@ -17,6 +17,7 @@
 #include "printer/printer.h"
 #include "parser/argument/argument.h"
 #include "parser/argument/raw_container.h"
+#include "parser/info/info.h"
 
 using Rcpp::XPtr,
   Rcpp::as,
@@ -24,7 +25,8 @@ using Rcpp::XPtr,
 using std::string;
 using cmdline_arguments::parser::narg,
   cmdline_arguments::utils::convert_type,
-  cmdline_arguments::parser::argument::raw_argument;
+  cmdline_arguments::parser::argument::raw_argument,
+  cmdline_arguments::parser::argument::raw_Container;
 extern "C" {
 
   // using section
@@ -88,6 +90,12 @@ extern "C" {
     BEGIN_RCPP
     R_xlen_t z = convert_type<SEXP>(x);
     return wrap(z);
+    END_RCPP
+  }
+  SEXP _convertList(SEXP x){
+    BEGIN_RCPP
+    cmdline_arguments::utils::listOption(as<string>(x));
+    return wrap(R_NilValue);
     END_RCPP
   }
 
@@ -192,15 +200,89 @@ extern "C" {
     List out;
     out["first"] = loc.pop("-f");
     out["second"] = loc.get("--f");
-    out["fourth"] = loc.get("--g");
     out["third"] = loc.get("positionals");
+    out["fourth"] = loc.get("--g");
     return wrap(out);
 
     return wrap(R_NilValue);
     END_RCPP
   }
+  // raw_Container tests:
+  /* 1) Creation
+   * 2) argument addition
+   * 3) iteration
+   * 4) extract (through iteration)
+   */
+  SEXP create_raw_container(SEXP raw_option,
+                            SEXP name,
+                            SEXP outputName,
+                            SEXP listOption,
+                            SEXP narg){
+    BEGIN_RCPP
+    // Something here is crashing... the question is what.
+    XPtr<raw_Container> xPtr(new raw_Container(as<string>(raw_option),
+                                               as<string>(name),
+                                               as<string>(outputName),
+                                               as<string>(listOption),
+                                               as<string>(narg)));
 
+    return wrap(xPtr);
 
+    END_RCPP
+  }
+  SEXP raw_container_add_vector(SEXP ptr, SEXP _vector){
+    BEGIN_RCPP
+    XPtr<raw_Container> xPtr(ptr);
+    (*xPtr) += as<vector<string>>(_vector);
+    return wrap(xPtr);
+    END_RCPP
+  }
+  SEXP raw_container_add_string(SEXP ptr, SEXP _string){
+    BEGIN_RCPP
+    XPtr<raw_Container> xPtr(ptr);
+
+    xPtr -> add(as<string>(_string));
+//    (*xPtr) += as<string>(_string);
+    return wrap(xPtr);
+    END_RCPP
+  }
+  SEXP raw_container_extract(SEXP ptr){
+    BEGIN_RCPP
+    XPtr<raw_Container> xPtr(ptr);
+    List out;
+    for(const auto i : *xPtr){
+      out.push_back(wrap(i)); //no care for efficiency here. Just smash the object in.
+    }
+    return out;
+    END_RCPP
+  }
+  SEXP create_info(SEXP name, SEXP rawOption, SEXP flagOption,
+                   SEXP dest, SEXP rawAction, SEXP metaVar,
+                   SEXP narg){
+    BEGIN_RCPP
+    cmdline_arguments::parser::arguments::argument_info x;
+
+    x.name = as<string>(name);
+    x.rawOption = as<string>(rawOption);
+    x.flagOption = as<string>(flagOption);
+    x.dest = as<string>(dest);
+    x.metaVar = as<string>(metaVar);
+    x.rawNarg = as<string>(narg);
+    /*
+     string name,
+       rawNarg,
+       rawOption,
+       flagOption,
+       dest,
+       rawAction,
+       metaVar;
+
+     vector<string> flags,
+     choices;
+     */
+    END_RCPP
+    return wrap(R_NilValue);
+  }
 }
 
 
@@ -214,6 +296,7 @@ extern "C" {
 static const R_CallMethodDef CallEntries[] = {
 
   // <utils/matching.h>
+  // narg
   {"narg_create", (DL_FUNC) &narg_create, 2},
   {"narg_add", (DL_FUNC) &narg_add, 2},
   {"narg_close", (DL_FUNC) &narg_close, 1},
@@ -222,20 +305,35 @@ static const R_CallMethodDef CallEntries[] = {
   {"narg_getc", (DL_FUNC) &narg_getc, 1},
   {"narg_geterr", (DL_FUNC) &narg_geterr, 1},
   {"narg_getname", (DL_FUNC) &narg_getname, 1},
-  {"convert", (DL_FUNC) &_convert, 1},
 
+  // convert
+  {"convert", (DL_FUNC) &_convert, 1},
+  {"convertList", (DL_FUNC) &_convertList, 1},
+
+  // raw_argument
   {"raw_argument_create", (DL_FUNC) &_raw_argument, 3},
   {"raw_argument_add", (DL_FUNC) &_raw_argument_add, 2},
   {"raw_argument_digest", (DL_FUNC) &_raw_argument_digest, 1},
+
+  // pfunc
   {"do_call", (DL_FUNC) &do_call, 2},
   {"do_call2", (DL_FUNC) &do_call2, 2},
   {"execute_pfunc", (DL_FUNC) &execute_pfunc, 3},
+
+  //printfunc
   {"print_external", (DL_FUNC) &print_something_external, 2},
   {"print_internal", (DL_FUNC) &print_something_internal, 2},
+
+  // argument_locator
   {"argument_locator_test", (DL_FUNC) &argument_locator_test, 2},
-  // {"make_pfunc", (DL_FUNC) &make_pfunc, 3},
-  // {"make_pfunc_argless", (DL_FUNC) &make_pfunc_argless, 2},
-  // {"exec_pfunc", (DL_FUNC) &exec_pfunc, 2},
+
+  // Raw_container
+  {"create_raw_container", (DL_FUNC) &create_raw_container, 5},
+  {"raw_container_add_vector", (DL_FUNC) &raw_container_add_vector, 2},
+  {"raw_container_add_string", (DL_FUNC) &raw_container_add_string, 2},
+  {"raw_container_extract", (DL_FUNC) &raw_container_extract, 1},
+
+  {"create_info", (DL_FUNC) &create_info, 7},
   {NULL, NULL, 0}
 };
 

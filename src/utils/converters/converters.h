@@ -54,7 +54,7 @@ namespace cmdline_arguments::utils{
 
   class listOption{
   private:
-    listOptions option = individual; // Defaut to combine.
+    listOptions option = combine; // Defaut to combine.
   public:
     listOption(string t){
       add(t);
@@ -68,7 +68,8 @@ namespace cmdline_arguments::utils{
       char tf = static_cast<char>(std::tolower(static_cast<unsigned char>(t.front())));
       auto v = listOptionsMapper.find(tf);
       if(v != listOptionsMapper.end()){
-       option = v -> second;
+        option = v -> second;
+        return;
       }
       Rcpp::stop("Undefined option specified for handling of flags provided multiple times [Given=%s, valid={%s}]",
                  t,
@@ -87,31 +88,22 @@ namespace cmdline_arguments::utils{
       return *this;
     }
 
-    inline bool operator==(int rhs){
+    inline bool operator==(int rhs) const {
       return option == rhs;
     };
-    inline bool operator==(listOptions rhs){
+    inline bool operator==(listOptions rhs) const {
       return option == rhs;
     };
-    inline operator int(){
+    inline operator int() const {
       return static_cast<int>(this -> option);
     };
-    inline operator listOptions(){
+    inline operator listOptions() const {
+      return this -> option;
+    }
+    inline listOptions getOption() const {
       return this -> option;
     }
   };
-  template<typename T>
-  listOptions convert_listOption(T);
-  template<typename T>
-  listOptions convert_listOption(T, string);
-  template<>
-  listOptions convert_listOption(SEXP);
-  template<>
-  listOptions convert_listOption(SEXP, string);
-  template<>
-  listOptions convert_listOption(string);
-  template<>
-  listOptions convert_listOption(string, string);
 
 }
 

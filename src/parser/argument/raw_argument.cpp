@@ -59,5 +59,9 @@ namespace cmdline_arguments::parser::argument{
   raw_argument::operator ArgumentList() const{
     return digest();
   }
+  raw_argument::operator SEXP() const{
+    ArgumentList o(this -> digest());
+    return wrap(o.data);
+  }
 }
 

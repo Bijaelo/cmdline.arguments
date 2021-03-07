@@ -78,16 +78,16 @@ namespace cmdline_arguments::parser{
         find_next_flag(start, end);
         // check if flag position contains a value
         auto hasEqual = flagpos -> find('=');
-        size_t flagSize = flagpos -> size(), nvals = 0;
         string curFlag;
-        if(hasEqual != string::npos && flagSize != hasEqual){
-          string flagVal = flagpos -> substr(hasEqual + 1, flagSize);
-          argVals.push_back(flagVal);
-          nvals++;
-          curFlag = flagpos -> substr(0, hasEqual - 1);
-        }else{
+        // Wtf did i think when i wrote this?
+        if(hasEqual != string::npos){
+          // We found an equal sign. Extract the value following the equal sign.
+          string equalVal = flagpos -> substr(hasEqual + 1);
+          if(equalVal.size() != 0)
+            argVals.push_back(equalVal);
+          curFlag = flagpos -> substr(0, hasEqual);
+        }else
           curFlag = *flagpos;
-        }
         // append values only if we have any "values".
         // Performs 1 redundant check for "end" but who cares.
         if(start != flagpos + 1){

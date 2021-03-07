@@ -19,6 +19,7 @@ using Rcpp::stop;
  *
  */
 
+
 namespace cmdline_arguments::parser{
 
   class narg{
@@ -26,15 +27,22 @@ namespace cmdline_arguments::parser{
     // storage for raw "narg" and name (latter used for error message)
     // TODO: change name to a string reference, once name is stored in
     // an overall container safely (breaks when not stored safely)
-    const string narg_raw, name;
-
+    const string narg_raw;
+    const string name; // Should work as we don't
     // store value.
     R_xlen_t current_value = 0, critical_value;
 
     // Comparison functions. Store the one we'll actually use in the function
-    // pointer, to minimize
-    typedef bool (narg::*cmpfun)(R_xlen_t& more) const;
-    cmpfun compare_fun;
+    // to minimize time spent in "if" and "switch". (we only need 1 dereferencing here)
+    //
+    //typedef bool (narg::*cmpfun)(R_xlen_t& more) const;
+    //cmpfun compare_fun;
+
+
+    // I would prefer to do as such:But for some reason this fails.
+    std::function<bool(R_xlen_t&)> compare_fun;
+
+
     //function<bool(R_xlen_t&)> compare_fun;
     bool le(R_xlen_t&) const,
       leq(R_xlen_t&) const,
@@ -50,16 +58,15 @@ namespace cmdline_arguments::parser{
 
   public:
     // Initializer
-    narg(const string, const string&);
+    narg(const string, const string);
     // comparison function
     // Test if we can accept 'R_xlen_t' more arguments.
-    bool digest(R_xlen_t&) const;
+    bool digest(R_xlen_t) const;
     // Close narg,
     // Test that the bool is fulfilled, otherwise throw error.
     void close() const;
 
-    void add(R_xlen_t&);
-
+    void add(R_xlen_t);
 
     // Operator overload to "digest"
     bool operator()(R_xlen_t&) const;

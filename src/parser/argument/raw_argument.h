@@ -38,6 +38,7 @@ namespace cmdline_arguments::parser::argument{
     // Return depends on the
     ArgumentList digest() const;
     operator ArgumentList() const;
+    operator SEXP() const;
   private:
     const input_types type;
     const string name;

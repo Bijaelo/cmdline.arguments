@@ -56,31 +56,32 @@ namespace cmdline_arguments::parser{
   /* Parser function for narg_raw
    * Sets copare_fun, errormsg and critical_value
    */
+#define bind1(member_fun) std::bind(member_fun, this, std::placeholders::_1)
   inline void narg::parse_narg(){
     if(this -> narg_raw == "?"){
       // 0 or 1 arguments
       this -> critical_value = 1;
-      this -> compare_fun = &narg::leq;
+      this -> compare_fun = bind1(&narg::leq);
       this -> errormsg = "[arg: %s] accepts <=%i arguments, but more were provided.";
     }else if(this -> narg_raw == "+"){
       // 1 or more arguments
       this -> critical_value = 1;
-      this -> compare_fun = &narg::geq;
+      this -> compare_fun = bind1(&narg::geq);
       this -> errormsg = "[arg: %s] accepts >=%i arguments, but less were provided.";
     }else if(this -> narg_raw == "*"){
       // 0 or more arguments (error simply not plausible)
       this -> critical_value = 0;
-      this -> compare_fun = &narg::geq;
+      this -> compare_fun = bind1(&narg::geq);
       this -> errormsg = "[arg: %s] accepts >=%i arguments, but less were provided.";
     }else if(this -> narg_raw == "-"){
       // exactly 0 arguments
       this -> critical_value = 0;
-      this -> compare_fun = &narg::eq;
+      this -> compare_fun =bind1(&narg::eq);
       this -> errormsg = "[arg: %s] accepts exactly %i arguments, but more were provided.";
     }else if(has_only_digits(this -> narg_raw)){
       // Exactly N arguments
       this -> critical_value = (R_xlen_t)std::stoi(this -> narg_raw);
-      this -> compare_fun = &narg::eq;
+      this -> compare_fun = bind1(&narg::eq);
       this -> errormsg = "[arg: %s] accepts exactly %i arguments, but more were provided.";
     }else{
       // Complex number of arguments (N+, N-)
@@ -91,11 +92,11 @@ namespace cmdline_arguments::parser{
              this -> name,
              "\"?\", \"-\", \"+\", \"*\", \"N\", \"N-\", \"N+\"");
       if(lc == '-'){
-        this -> compare_fun = &narg::leq;
+        this -> compare_fun = bind1(&narg::leq);
         this -> errormsg = "[arg: %s] accepts <=%i arguments, but more were provided.";
       }
       else if(lc == '+'){
-        this -> compare_fun = &narg::geq;
+        this -> compare_fun = bind1(&narg::geq);
         this -> errormsg = "[arg: %s] accepts >=%i arguments, but less were provided.";
       }
       else
@@ -107,16 +108,16 @@ namespace cmdline_arguments::parser{
     return;
   }
   // Initializers
-  narg::narg(const string narg_raw_, const string& name_) :
+  narg::narg(const string narg_raw_, const string name_) :
    narg_raw(narg_raw_),
    name(name_){
-    this -> parse_narg();
+    this -> parse_narg(); // <== Not the cause of crashing
   }
   // user-faced interface
-  bool narg::digest(R_xlen_t& more) const {
+  bool narg::digest(R_xlen_t more) const {
     // Use store comparison function (eq, le, lq, ge, gq) and test for too many/few arguments.
     // Return true/false, or throw an error in certain cases.
-    return std::invoke(compare_fun, this, more);
+    return std::invoke(compare_fun, more);
   }
   // Close up narg
   // test that we satisfy our condition otherwise throw errrormsg
@@ -132,10 +133,9 @@ namespace cmdline_arguments::parser{
     }
     return;
   }
-
-  void narg::add(R_xlen_t& more){
-    this -> digest(more);
-    this -> current_value += more;
+  void narg::add(R_xlen_t more){
+    digest(more);
+    current_value += more;
     return;
   }
   // Operators (only exposed on the c++ side)
