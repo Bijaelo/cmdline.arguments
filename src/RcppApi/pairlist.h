@@ -21,16 +21,14 @@
  *
  */
 
-#ifndef cmdline_pairlist
-#define cmdline_pairlist
+#ifndef cmdline_args_pairlist_h
+#define cmdline_args_pairlist_h
 
 #include "utils/ArgumentList.h"
-#include <Rcpp.h>
-#include <Rinternals.h>
 
 namespace Rcpp{
   template<>
-  inline SEXP pairlist(const cmdline_arguments::utils::ArgumentList& t1){
+  inline SEXP pairlist(const cmd_args::utils::ArgumentList& t1){
     // code mostly taken from do_docall
     // Not sure why this one is complaining about it not being a union type?
     Rcpp::List data = t1.data;
@@ -57,3 +55,4 @@ namespace Rcpp{
   };
 }
 #endif
+

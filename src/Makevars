@@ -1,17 +1,16 @@
 # Default make file
 PKG_CPPFLAGS=-I.
 
-CXX_STD = CXX17
+CXX_STD = CXX20
 
 # Include all C++ files in src/ and its subdirectories: src/*
-SOURCES=exports.cpp parser/narg/narg.cpp parser/pfunc/pfunc.cpp utils/converters/converters.cpp utils/type_name/type_name.cpp parser/argument/raw_argument.cpp parser/argument/argument.cpp
+SOURCES=exports.cpp parser/argument/class.cpp parser/argument/raw/class.cpp parser/narg/narg.cpp parser/pfunc/pfunc.cpp utils/converters/converters.cpp utils/type_name/type_name.cpp
 
 # Obtain the object files
 OBJECTS=$(SOURCES:.cpp=.o)
 
 # Make the shared object
-all: $(SHLIB)
-# clean
+all: $(SHLIB) clean
 
 # Provide recipe to remove all objects
 clean:

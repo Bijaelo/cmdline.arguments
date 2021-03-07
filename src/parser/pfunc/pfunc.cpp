@@ -3,7 +3,8 @@
 #include "parser/pfunc/pfunc.h"
 
 
-namespace cmdline_arguments::parser{
+namespace cmd_args{
+namespace parser{
 
 
   // template<typename T, typename S>
@@ -16,4 +17,5 @@ namespace cmdline_arguments::parser{
 
 
 
+}
 }

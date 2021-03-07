@@ -21,12 +21,13 @@ using std::string;
 
 // den kan ikke finde string type_name<string>. But why can't it?
 
-namespace cmdline_arguments::utils{
-  template <typename T>
-  string type_name();
-  template<>
-  string type_name<string>();
-
-}
+namespace cmd_args{
+  namespace utils{
+    template <typename T>
+    string type_name();
+    template<>
+    string type_name<string>();
+  } //~utils
+} // ~cmd_args
 
 //#endif
