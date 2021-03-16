@@ -27,6 +27,8 @@ using cmd_args::parser::narg,
   cmd_args::utils::convert_type,
   cmd_args::parser::argument::raw_argument,
   cmd_args::parser::argument::raw_Container;
+using namespace
+  cmd_args::parser::argument;
 extern "C" {
 
   // using section
@@ -256,33 +258,41 @@ extern "C" {
     return out;
     END_RCPP
   }
-  SEXP create_info(SEXP name, SEXP rawOption, SEXP flagOption,
-                   SEXP dest, SEXP rawAction, SEXP metaVar,
-                   SEXP narg){
+  SEXP create_info(SEXP name,
+                   SEXP narg,
+                   SEXP meta,
+                   SEXP action,
+                   SEXP rawPassingOption,
+                   SEXP rawIngestionOption,
+                   SEXP helpFlags,
+                   SEXP flags,
+                   SEXP choices,
+                   SEXP parseFun,
+                   SEXP help,
+                   SEXP defaultVal,
+                   SEXP constVal,
+                   SEXP required){
     BEGIN_RCPP
-    cmd_args::parser::arguments::argument_info x;
+    cmd_args::parser::argument::make_info_single(name,
+                                                 narg,
+                                                 meta,
+                                                 action,
+                                                 rawPassingOption,
+                                                 rawIngestionOption,
+                                                 helpFlags,
+                                                 flags,
+                                                 choices,
+                                                 parseFun,
+                                                 help,
+                                                 defaultVal,
+                                                 constVal,
+                                                 required);
 
-    x.name = as<string>(name);
-    x.rawOption = as<string>(rawOption);
-    x.flagOption = as<string>(flagOption);
-    x.dest = as<string>(dest);
-    x.metaVar = as<string>(metaVar);
-    x.rawNarg = as<string>(narg);
-    /*
-     string name,
-       rawNarg,
-       rawOption,
-       flagOption,
-       dest,
-       rawAction,
-       metaVar;
-
-     vector<string> flags,
-     choices;
-     */
     END_RCPP
     return wrap(R_NilValue);
   }
+
+
 }
 
 
@@ -333,21 +343,12 @@ static const R_CallMethodDef CallEntries[] = {
   {"raw_container_add_string", (DL_FUNC) &raw_container_add_string, 2},
   {"raw_container_extract", (DL_FUNC) &raw_container_extract, 1},
 
-  {"create_info", (DL_FUNC) &create_info, 7},
+  {"create_info", (DL_FUNC) &create_info, 14},
+
   {NULL, NULL, 0}
 };
-
 // Register the pointers as Dynamic Symbols for R.
-extern "C" void R_init_cmd_args(DllInfo *dll) {
+extern "C" void R_init_cmdline_arguments(DllInfo *dll) {
   R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
   R_useDynamicSymbols(dll, (Rboolean)FALSE);
 }
-/*
- undefined reference to
- cmd_args::parser::parserFunction::parserFunction
- <Rcpp::Function_Impl
-  <Rcpp::PreserveStorage>, std::__cxx11::basic_string<char, std::char_traits<char>,
-  std::allocator<char>
- >,
- Rcpp::ArgumentList_Impl<19, Rcpp::PreserveStorage> >(Rcpp::Function_Impl<Rcpp::PreserveStorage>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, Rcpp::ArgumentList_Impl<19, Rcpp::PreserveStorage>)
- */

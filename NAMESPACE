@@ -16,6 +16,7 @@ export(createArgument)
 export(setUnparsedArgs)
 export(demandReady)
 export(parseargs)
+export(genAInfo)
 if(getRversion() >= "3.6.0") {
 # getflags
   S3method(getflags, cmd_arg)
