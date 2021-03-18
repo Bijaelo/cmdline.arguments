@@ -16,30 +16,76 @@
 #' @returns
 #'
 #' @param name
-#' @param
-#' @param
+#' @param flags
+#' @param name
+#' @param narg
+#' @param action
+#' @param rawPassingOption
+#' @param rawIngestionOption
+#' @param helpFlags
+#' @param choices
+#' @param parseFun
+#' @param help
+#' @param defaultVal
+#' @param constVal
+#' @param required
 #'
 #'
-#'
-#' @note
-#'
-#'
-add_argument <- function(parser, name, narg, action = 'store', s){
+add_argument <- function(parser,
+                         flags,
+                         name,
+                         narg,
+                         action = 'store',
+                         rawPassingOption = "vector_input",
+                         rawIngestionOption = "combine",
+                         helpFlags = '-h/--help',
+                         choices = NULL,
+                         parseFun = identity,
+                         help = "I am a help message",
+                         defaultVal = NULL,
+                         constVal = NULL,
+                         required = TRUE,
+                         meta = NULL){
   # If name is a list, we assume it contains all argument parameters
-  if(is.list(name)){
-
-    return(NULL)
-  }
-  # if it does not, we have to go through and check if each is missing in R.
-  if(missing(narg))
-    stop("cannot add an argument without knowing narg")
-  if(missing(action))
-    stop("cannot add argument without an action")
-  if(missing(s))
-    stop("hello world")
-
+  if(missing(name))
+    stop("name must not be missing")
+  if(is.list(name))
+    return(.Call(make_argument_multiple, name))
+  # If name has length greater than 1, then we concatenate fall elements into a
+  # list and pass it along as one call.
+  if(length(name) > 1)
+    return(.Call(make_argument_multiple,
+                 list(name = name,
+                      narg = narg,
+                      meta = NULL,
+                      action = action,
+                      rawPassingOpton = rawPassingOption,
+                      rawIngestionOption = rawIngestionOption,
+                      helpFlags = helpFlags,
+                      flags = flags,
+                      choices = choices,
+                      parseFun = parseFun,
+                      help = help,
+                      defaultVal = defaultVal,
+                      constVal = constVal,
+                      required = required)))
+  # If nothing else, we just try to make a single argument.
+  .Call(make_argument,
+        name,
+        narg,
+        meta,
+        action,
+        rawPassingOption,
+        rawIngestionOption,
+        helpFlags,
+        flags,
+        choices,
+        parseFun,
+        help,
+        defaultVal,
+        constVal,
+        required
+        )
 }
 
-s <- function(){
 
-}

@@ -258,6 +258,72 @@ extern "C" {
     return out;
     END_RCPP
   }
+
+  SEXP make_argument(SEXP name,
+                     SEXP narg,
+                     SEXP meta,
+                     SEXP action,
+                     SEXP rawPassingOption,
+                     SEXP rawIngestionOption,
+                     SEXP helpFlags,
+                     SEXP flags,
+                     SEXP choices,
+                     SEXP parseFun,
+                     SEXP help,
+                     SEXP defaultVal,
+                     SEXP constVal,
+                     SEXP required){
+    BEGIN_RCPP
+    argument_info info = make_info_single(name,
+                                          narg,
+                                          meta,
+                                          action,
+                                          rawPassingOption,
+                                          rawIngestionOption,
+                                          helpFlags,
+                                          flags,
+                                          choices,
+                                          parseFun,
+                                          help,
+                                          defaultVal,
+                                          constVal,
+                                          required);
+    XPtr<argument_info> ptr(new argument_info(info));
+    return wrap(ptr);
+    END_RCPP
+  }
+
+  SEXP make_argument_multiple(SEXP listInfo){
+    BEGIN_RCPP
+    vector<argument_info> info = make_argument_info_from_row_list(listInfo);
+
+    XPtr<vector<argument_info>> ptr(new vector<argument_info>());
+    for(auto i : info){
+      ptr->push_back(i);
+    }
+    return wrap(ptr);
+    END_RCPP
+  }
+
+  SEXP check_argument_single(SEXP Xptr){
+    BEGIN_RCPP
+    XPtr<argument_info> ptr(Xptr);
+    Rcout << ptr -> name << "\n";
+    return Xptr;
+    END_RCPP
+  }
+
+  SEXP check_argument_multiple(SEXP Xptr){
+    BEGIN_RCPP
+    XPtr<vector<argument_info>> ptr(Xptr);
+    R_xlen_t n = ptr -> size();
+    for(R_xlen_t i = 0; i < n; i++){
+      Rcout << ((*ptr)[i]).name << "\n";
+    }
+    return Xptr;
+    END_RCPP
+  }
+
   SEXP create_info(SEXP name,
                    SEXP narg,
                    SEXP meta,
@@ -291,7 +357,18 @@ extern "C" {
     END_RCPP
     return wrap(R_NilValue);
   }
-
+  SEXP create_info2(SEXP listInfo){
+    BEGIN_RCPP
+    make_argument_info_from_column_list(listInfo);
+    return wrap(R_NilValue);
+    END_RCPP
+  }
+  SEXP create_info3(SEXP listInfo){
+    BEGIN_RCPP
+    make_argument_info_from_row_list(listInfo);
+    return wrap(R_NilValue);
+    END_RCPP
+  }
 
 }
 
@@ -343,7 +420,13 @@ static const R_CallMethodDef CallEntries[] = {
   {"raw_container_add_string", (DL_FUNC) &raw_container_add_string, 2},
   {"raw_container_extract", (DL_FUNC) &raw_container_extract, 1},
 
-  {"create_info", (DL_FUNC) &create_info, 14},
+  //{"create_info", (DL_FUNC) &create_info, 14},
+
+
+  {"make_argument", (DL_FUNC) &make_argument, 14},
+  {"check_argument_single", (DL_FUNC) &check_argument_single, 1},
+  {"make_argument_multiple", (DL_FUNC) &make_argument_multiple, 1},
+  {"check_argument_multiple", (DL_FUNC) &check_argument_multiple, 1},
 
   {NULL, NULL, 0}
 };

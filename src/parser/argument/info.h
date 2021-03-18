@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cctype>
 #include <map>
+#include <utility>
 #include "utils/sugar.h"
 using namespace std;
 using namespace Rcpp;
@@ -137,12 +138,12 @@ namespace cmd_args{
           stringMeta;
         if(!is<String>(meta) || as<String>(meta) == NA_STRING){
           // Default meta to capitalized name
-          stringMeta = as<string>(name);
+          stringMeta = stringName;
           transform(stringMeta.begin(), stringMeta.end(), stringMeta.begin(), [](unsigned char c){return toupper(c);});
         }else
           stringMeta = as<string>(meta);
         if(!is<String>(action) || as<String>(action) == NA_STRING)
-          stop("action must be one of [%s].",
+          stop("action must be one of (%s).",
                "\"store[_value]\", \"const\", \"store_true\", \"store_false\"");
         string stringAction = as<string>(action);
         if(!is<String>(rawPassingOption) || as<String>(rawPassingOption) == NA_STRING)
@@ -169,7 +170,7 @@ namespace cmd_args{
         vector<string> vectorChoices;
         if(is<CharacterVector>(choices) && !as<bool>(any_na(choices)))
           vectorChoices = as<vector<string>>(choices);
-        else if(choices != R_NilValue)
+        else if(!Rf_isNull(choices))
           stop("Currently choices must be a character vector or NULL. This may change in the future when a reasonable implementation has been thought of. Contributions are welcome.");
         if((!is<String>(parseFun) || as<String>(parseFun) == NA_STRING) && !is<Function>(parseFun))
           stop("parseFun must be either a single string or a callable function.");
@@ -213,24 +214,40 @@ namespace cmd_args{
                                              "defaultVal",
                                              "constVal",
                                              "required"};
-      /*inline vector<argument_info> make_info_row(List listInfo){
-        // each entry in the list contains
 
-
-      }*/
+      // Used for "in(x, table)" and "match(x, table)", to avoid constructing hash tables multiple times.
       typedef Rcpp::sugar::IndexHash<STRSXP> strHASH;
-      // need to change this to just test the size of
-      inline vector<argument_info> make_argument_from_column_list(SEXP& listInfo){
+
+      /* This function needs to be smarter.
+       * Currently converts everything to list, which causes make_info_single to fail.
+       * The proper way to do this would be to perform the checks from make_info_single
+       * and then iterate over each element in the appropriate fashion.
+       *
+       * There might be an easy way around it, but I don't think this makes sense.
+       *
+       * So basically: Rewrite the function from scratch.
+       * Go the long and bothersome way of checking every element in listInfo.
+       *
+       * After checking the type for each vector/list in listInfo, we avoid the
+       * need to check the type of each element (and for NULL's in many cases).
+       * But it does require some extra boiler plate code.
+       *
+       * BLAAARGH
+       */
+      inline vector<argument_info> make_argument_info_from_column_list(const SEXP& listInfo){
         // The list contains multiple inputs.
         if(TYPEOF(listInfo) != VECSXP)
-          stop("Unexpected error: non-list passed to make_argument_from_column_list");
+          stop("Unexpected error: non-list passed to make_argument_info_from_column_list");
         SEXP names = Rf_getAttrib(listInfo, R_NamesSymbol); // Automatically protected
+        // Test that we have actually received a list with column parameters.
         if(names == R_NilValue)
-          stop("parameter list contains ");
+          stop("unnamed parameter list passed to make_argument_from_column_list");
         if(anyDuplicated(names))
           stop("duplicate parameters provided in add_argument for parameter list");
-        if(!same_lengths(listInfo))
-          stop("all parameters provided must have the same length");
+        // same length check does not work because of "flags", "choices" and "constVal".
+        // Need to rethink this check.
+        //if(!same_lengths(listInfo))
+        //  stop("all parameters provided must have the same length");
         R_xlen_t n = Rf_xlength(VECTOR_ELT(listInfo, 0));
 
         // Manually evaluate "in" in steps, as we potentially both need a call to "in" and "match".
@@ -246,7 +263,7 @@ namespace cmd_args{
             map<string, List> args;
             for(auto i : missing){
               string ii = as<string>(i);
-              if(ii == "choices" || ii == "constVal" || ii == "defaultVal"){
+              if(ii == "choices" || ii == "constVal" || ii == "defaultVal" || ii == "meta"){
                 List appends(n);
                 args[ii] = appends;
               }else
@@ -334,6 +351,29 @@ namespace cmd_args{
                                          constVal[i],
                                          required[i]
           ));
+        }
+        return out;
+      }
+
+      inline vector<argument_info> make_argument_info_from_row_list(const SEXP& listInfo){
+        // each entry in the list contains
+        if(TYPEOF(listInfo) != VECSXP)
+          stop("Unexpected error: non-list passed to make_argument_info_from_row_list");
+        SEXP names = Rf_getAttrib(listInfo, R_NamesSymbol);
+        if(!Rf_isNull(names))
+          return make_argument_info_from_column_list(listInfo);
+        vector<argument_info> intermediary, out;
+        auto back = back_inserter(out);
+        R_xlen_t n = Rf_xlength(listInfo);
+        // instead of complicating things, we'll
+        // just be a bit inefficient and call *_from_column_list
+        // instead and "move" the result into an output vector.
+        // This takes care of all the error checking for us,
+        // and makes life simple (at only small costs).
+        for(R_xlen_t i = 0; i < n; i++){
+          intermediary = make_argument_info_from_column_list(VECTOR_ELT(listInfo, i));
+          move(intermediary.begin(), intermediary.end(), back);
+          intermediary.clear(); // make sure it is cleared for the next time. (likely unnecessary).
         }
         return out;
       }
