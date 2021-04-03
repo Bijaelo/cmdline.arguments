@@ -127,7 +127,7 @@ namespace cmd_args{
                                             const SEXP& help,
                                             const SEXP& defaultVal,
                                             const SEXP& constVal,
-                                            const SEXP& required){
+                                            const bool& required){
         if(!is<String>(name) || as<String>(name) == NA_STRING)
           stop("argument name must be a single string");
         string stringName = as<string>(name);
@@ -156,8 +156,10 @@ namespace cmd_args{
                      "Unknown-non-string-type",
                      "individual, vector, combine");
         string stringRawIngestionOption = as<string>(rawIngestionOption);
+        /* Maybe I'll enforce this, maybe not. It doesnt seem sensible to enforce right now.
         if(!is<String>(helpFlags) || as<String>(helpFlags) == NA_STRING)
           stop("unexpected error, no flags for \"help\" was found. Please report this issue to the package github with an example for reproducing this error.");
+        */
         string stringHelpFlags = as<string>(helpFlags);
         vector<string> vectorFlags;
         Function any_na("anyNA"); // Faster than the Rcpp implementation. Not exactly sure why.
@@ -181,25 +183,82 @@ namespace cmd_args{
         RObject RObjectHelp = as<RObject>(help),
           RObjectDefaultVal = as<RObject>(defaultVal),
           RObjectConstVal = as<RObject>(constVal);
-        if(!is<bool>(required))
-          stop("required must be either TRUE or FALSE");
-        bool boolRequired = as<bool>(required);
         return argument_info(stringName,
-                           stringNarg,
-                           stringMeta,
-                           stringAction,
-                           stringRawPassingOption,
-                           stringRawIngestionOption,
-                           stringHelpFlags,
-                           vectorFlags,
-                           vectorChoices,
-                           RObjectParseFun,
-                           RObjectHelp,
-                           RObjectDefaultVal,
-                           RObjectConstVal,
-                           boolRequired);
+                             stringNarg,
+                             stringMeta,
+                             stringAction,
+                             stringRawPassingOption,
+                             stringRawIngestionOption,
+                             stringHelpFlags,
+                             vectorFlags,
+                             vectorChoices,
+                             RObjectParseFun,
+                             RObjectHelp,
+                             RObjectDefaultVal,
+                             RObjectConstVal,
+                             required);
       }
 
+      inline argument_info make_info_single(const SEXP& name,
+                                            const SEXP& narg,
+                                            const SEXP& meta,
+                                            const SEXP& action,
+                                            const SEXP& rawPassingOption,
+                                            const SEXP& rawIngestionOption,
+                                            const SEXP& helpFlags,
+                                            const SEXP& flags,
+                                            const SEXP& choices,
+                                            const SEXP& parseFun,
+                                            const SEXP& help,
+                                            const SEXP& defaultVal,
+                                            const SEXP& constVal,
+                                            const SEXP& required){
+        if(!is<bool>(required))
+          stop("required must be either TRUE or FALSE");
+        return make_info_single(name,
+                                narg,
+                                meta,
+                                action,
+                                rawPassingOption,
+                                rawIngestionOption,
+                                helpFlags,
+                                flags,
+                                choices,
+                                parseFun,
+                                help,
+                                defaultVal,
+                                constVal,
+                                as<bool>(required));
+      }
+      inline argument_info make_info_single(const SEXP& name,
+                                            const SEXP& narg,
+                                            const SEXP& meta,
+                                            const SEXP& action,
+                                            const SEXP& rawPassingOption,
+                                            const SEXP& rawIngestionOption,
+                                            const SEXP& helpFlags,
+                                            const SEXP& flags,
+                                            const SEXP& choices,
+                                            const SEXP& parseFun,
+                                            const SEXP& help,
+                                            const SEXP& defaultVal,
+                                            const SEXP& constVal,
+                                            const int& required){
+        return make_info_single(name,
+                                narg,
+                                meta,
+                                action,
+                                rawPassingOption,
+                                rawIngestionOption,
+                                helpFlags,
+                                flags,
+                                choices,
+                                parseFun,
+                                help,
+                                defaultVal,
+                                constVal,
+                                static_cast<bool>(required));
+      }
       static const CharacterVector fields = {"name",
                                              "narg",
                                              "meta",
@@ -215,144 +274,289 @@ namespace cmd_args{
                                              "constVal",
                                              "required"};
 
+
+// Macro for generating NA string vector.
+// The protect "should" be unnecessary. But rather safe than sorry.
+#define repn(where, what, n) do {                              \
+      PROTECT(where = Rf_allocVector(STRSXP, n));              \
+      ptr = STRING_PTR(where);                                 \
+      for(R_xlen_t i = 0; i < n; i++, ptr++)                   \
+        *ptr = what;                                           \
+      nprot++;                                                 \
+} while (0)
+
+// Small
+#define nList(where, n) do{                                    \
+      where = PROTECT(Rf_allocVector(VECSXP, n));              \
+      nprot++;                                                 \
+} while (0);                                                   \
+//
+
+
+      inline void assignInfo(SEXP& where, const SEXP& listInfo, R_xlen_t& j){
+        if(j > 0){
+          where = VECTOR_ELT(listInfo, j - 1);
+        }
+      }
       // Used for "in(x, table)" and "match(x, table)", to avoid constructing hash tables multiple times.
       typedef Rcpp::sugar::IndexHash<STRSXP> strHASH;
-
-      /* This function needs to be smarter.
-       * Currently converts everything to list, which causes make_info_single to fail.
-       * The proper way to do this would be to perform the checks from make_info_single
-       * and then iterate over each element in the appropriate fashion.
-       *
-       * There might be an easy way around it, but I don't think this makes sense.
-       *
-       * So basically: Rewrite the function from scratch.
-       * Go the long and bothersome way of checking every element in listInfo.
-       *
-       * After checking the type for each vector/list in listInfo, we avoid the
-       * need to check the type of each element (and for NULL's in many cases).
-       * But it does require some extra boiler plate code.
-       *
-       * BLAAARGH
-       */
       inline vector<argument_info> make_argument_info_from_column_list(const SEXP& listInfo){
-        // The list contains multiple inputs.
+        vector<argument_info> res;
+        BEGIN_RCPP
         if(TYPEOF(listInfo) != VECSXP)
           stop("Unexpected error: non-list passed to make_argument_info_from_column_list");
         SEXP names = Rf_getAttrib(listInfo, R_NamesSymbol); // Automatically protected
         // Test that we have actually received a list with column parameters.
         if(names == R_NilValue)
           stop("unnamed parameter list passed to make_argument_from_column_list");
-        if(anyDuplicated(names))
-          stop("duplicate parameters provided in add_argument for parameter list");
-        // same length check does not work because of "flags", "choices" and "constVal".
-        // Need to rethink this check.
-        //if(!same_lengths(listInfo))
-        //  stop("all parameters provided must have the same length");
-        R_xlen_t n = Rf_xlength(VECTOR_ELT(listInfo, 0));
-
-        // Manually evaluate "in" in steps, as we potentially both need a call to "in" and "match".
-        // This removes the need to create hashTable twice.
+        // Use manual hash-table
+        // Avoids creating 3 hash-tables, 1 for Rcpp::duplicated, 1 for Rcpp::in, 1 for Rcpp:match
         strHASH hashTable(as<CharacterVector>(names));
-        hashTable.fill();
-        LogicalVector fieldsInNames(fields.begin(),
-                                    fields.end(),
-                                    Rcpp::sugar::InSet<strHASH>(hashTable));
-        CharacterVector missing = fields[!fieldsInNames];
-        { // get "&name" etc out of scope here.
-          if(missing.size() > 0){
-            map<string, List> args;
-            for(auto i : missing){
-              string ii = as<string>(i);
-              if(ii == "choices" || ii == "constVal" || ii == "defaultVal" || ii == "meta"){
-                List appends(n);
-                args[ii] = appends;
+        if(is_true(any(hashTable.fill_and_get_duplicated())))
+          stop("duplicate parameters provided in add_argument for parameter list");
+        // Use STRING_PTR as we already know the names is not NULL (eg: safe).
+        SEXP* namePtr = STRING_PTR(names);
+        R_xlen_t n = -1;
+        for(R_xlen_t i = Rf_xlength(listInfo); i >= 0; i--) // Find name length.
+          if(strcmp(CHAR(namePtr[i]), "name") == 0){
+            n = Rf_xlength(VECTOR_ELT(listInfo, i));
+            break;
+          }
+          if(n == -1)
+            stop("\"name\" must be included in all calls to add_argument");
+        // Create variables that needs to be passed to make_info_single
+        // We'll allocate these after checking their types.
+#pragma GCC diagnostic push // this should remove warnings but it doesn't
+#pragma GCC diagnostic ignored "-Wall"
+        SEXP name,
+         narg,
+         meta,
+         action,
+         rawPassingOption,
+         rawIngestionOption,
+         helpFlags,
+         flags,
+         choices,
+         parseFun,
+         help,
+         defaultVal,
+         constVal,
+         required;
+        SEXP* ptr;
+#pragma GCC diagnostic pop
+        // Check if we have any missing variables, that need to be filles.
+        LogicalVector parametersInName(fields.begin(),
+                                       fields.end(),
+                                       Rcpp::sugar::InSet<strHASH>(hashTable));
+        CharacterVector missing = fields[!parametersInName];
+        if(n == 1){
+          // We have a bit of optimization plausible when we only have a single field.
+          // 1) Assignment need to be single values
+          // 2) Type checking is done through make_argument_single
+          // 3) We dont need to check argument length but just "assume" they're all singular
+          if(missing.size() != 0){
+            for(auto i: missing){
+              // Could save some time by instead making it a string-view.
+              string iString = as<string>(i);
+              if(iString == "meta"){
+                meta = NA_STRING;
+              }else if(iString == "choices"){
+                choices = R_NilValue;
+              }else if(iString == "constVal"){
+                constVal = R_NilValue;
+              }else if(iString == "action"){
+                repn(meta, wrap("store"), 1);
+              }else if(iString == "helpFlags"){
+                helpFlags = NA_STRING;
+              }else if(iString == "defaultVal"){
+                defaultVal = R_NilValue;
+              }else if(iString == "rawPassingOption"){
+                repn(rawPassingOption, wrap("combine"), 1);
+              }else if(iString == "rawIngestionOption"){
+                repn(rawPassingOption, wrap("vector"), 1); // default to vector
+              }else if(iString == "required"){
+                required = PROTECT(Rf_allocVector(LGLSXP, 1));
+                nprot++;
+                SET_LOGICAL_ELT(required, 0, FALSE);
               }else
-                stop("Missing required parameter %s in argument list", ii);
+                stop("Missing required parameter %s in argument list", iString);
             }
-            // Add the existing arguments.
-            SEXP* ptr = STRING_PTR(names);
-            for(R_xlen_t j = 0; j < n; j++){
-              args[CHAR(ptr[j])] = VECTOR_ELT(listInfo, j);
+            vector<R_xlen_t> fieldsPositions(as<vector<R_xlen_t>>(hashTable.lookup(fields.get_ref())));
+            R_xlen_t nF = fieldsPositions.size();
+            assignInfo(name, listInfo, fieldsPositions[0]);
+            assignInfo(narg, listInfo, fieldsPositions[1]);
+            assignInfo(meta, listInfo, fieldsPositions[2]);
+            assignInfo(action, listInfo, fieldsPositions[3]);
+            assignInfo(rawPassingOption, listInfo, fieldsPositions[4]);
+            assignInfo(rawIngestionOption, listInfo, fieldsPositions[5]);
+            assignInfo(helpFlags, listInfo, fieldsPositions[6]);
+            assignInfo(flags, listInfo, fieldsPositions[7]);
+            assignInfo(choices, listInfo, fieldsPositions[8]);
+            assignInfo(parseFun, listInfo, fieldsPositions[9]);
+            assignInfo(help, listInfo, fieldsPositions[10]);
+            assignInfo(defaultVal, listInfo, fieldsPositions[11]);
+            assignInfo(constVal, listInfo, fieldsPositions[12]);
+            assignInfo(required, listInfo, fieldsPositions[13]);
+            res.push_back(make_info_single(name,
+                                          narg,
+                                          meta,
+                                          action,
+                                          rawPassingOption,
+                                          rawIngestionOption,
+                                          helpFlags,
+                                          flags,
+                                          choices,
+                                          parseFun,
+                                          help,
+                                          defaultVal,
+                                          constVal,
+                                          required));
+          }
+        }else{
+          // If we have multiple arguments, we need have to perform all of our type checking.
+          if(missing.size() != 0){
+            for(auto i: missing){
+              // Could save some time by instead making it a string-view.
+              string iString = as<string>(i);
+              if(iString == "meta"){
+                repn(meta, NA_STRING, n);
+              }else if(iString == "choices"){
+                nList(choices, n);
+              }else if(iString == "constVal"){
+                nList(constVal, n);
+              }else if(iString == "action"){
+                repn(meta, wrap("store"), n);
+              }else if(iString == "helpFlags"){
+                repn(helpFlags, NA_STRING, n);
+              }else if(iString == "defaultVal"){
+                nList(defaultVal, n);
+              }else if(iString == "rawPassingOption"){
+                repn(rawPassingOption, wrap("combine"), n);
+              }else if(iString == "rawIngestionOption"){
+                repn(rawPassingOption, wrap("vector"), n); // default to vector
+              }else if(iString == "required"){
+                required = PROTECT(Rf_allocVector(LGLSXP, n));
+                nprot++;
+                for(R_xlen_t i = 0; i < n; i++)
+                  SET_LOGICAL_ELT(required, i, FALSE);
+              }else
+                stop("Missing required parameter %s in argument list", iString);
             }
-            List &name = args["name"],
-                 &narg = args["narg"],
-                 &meta = args["meta"],
-                 &action = args["action"],
-                 &rawPassingOption = args["rawPassingOption"],
-                 &rawIngestionOption = args["rawIngestionOption"],
-                 &helpFlags = args["helpFlags"],
-                 &choices = args["choices"],
-                 &parseFun = args["parseFun"],
-                 &help = args["help"],
-                 &defaultVal = args["defaultVal"],
-                 &constVal = args["constVal"],
-                 &required = args["required"],
-                 &flags = args["flags"];
+          }
 
-            // Does not work: Needs to subset args too.
-
-            vector<argument_info> out;
-            for(R_xlen_t i = 0; i < n; n ++){
-              out.push_back(make_info_single(name[i],
-                                             narg[i],
-                                             meta[i],
-                                             action[i],
-                                             rawPassingOption[i],
-                                             rawIngestionOption[i],
-                                             helpFlags[i],
-                                             flags[i],
-                                             choices[i],
-                                             parseFun[i],
-                                             help[i],
-                                             defaultVal[i],
-                                             constVal[i],
-                                             required[i]
-                                             ));
+          // Assign the remaining parameters.
+          vector<R_xlen_t> fieldsPositions(as<vector<R_xlen_t>>(hashTable.lookup(fields.get_ref())));
+          R_xlen_t nF = fieldsPositions.size();
+          assignInfo(name, listInfo, fieldsPositions[0]);
+          assignInfo(narg, listInfo, fieldsPositions[1]);
+          assignInfo(meta, listInfo, fieldsPositions[2]);
+          assignInfo(action, listInfo, fieldsPositions[3]);
+          assignInfo(rawPassingOption, listInfo, fieldsPositions[4]);
+          assignInfo(rawIngestionOption, listInfo, fieldsPositions[5]);
+          assignInfo(helpFlags, listInfo, fieldsPositions[6]);
+          assignInfo(flags, listInfo, fieldsPositions[7]);
+          assignInfo(choices, listInfo, fieldsPositions[8]);
+          assignInfo(parseFun, listInfo, fieldsPositions[9]);
+          assignInfo(help, listInfo, fieldsPositions[10]);
+          assignInfo(defaultVal, listInfo, fieldsPositions[11]);
+          assignInfo(constVal, listInfo, fieldsPositions[12]);
+          assignInfo(required, listInfo, fieldsPositions[13]);
+          // Check input types are correct.
+          auto msg = "%s must be a character vector when multiple arguments are supplied to add_argument";
+          if(!is<CharacterVector>(name)) // 1
+            stop(msg, "name");
+          if(!is<CharacterVector>(narg)) // 2
+            stop(msg, "narg");
+          if(!is<CharacterVector>(meta)) // 3
+            stop(msg, "meta");
+          if(!is<CharacterVector>(action)) // 4
+            stop(msg, "action");
+          if(!is<CharacterVector>(rawPassingOption))
+            stop(msg, "rawPassingOption");
+          if(!is<CharacterVector>(rawIngestionOption))
+            stop(msg, "rawIngestionOption");
+          if(!is<CharacterVector>(helpFlags))
+            stop(msg, "helpFlags");
+          if(!is<CharacterVector>(flags))
+            stop(msg, "flags");
+          msg = "%s must be a list when multiple arguments are supplied to add_argument";
+          if(!is<List>(choices))
+            stop(msg, "choices");
+          if(!is<List>(constVal))
+            stop(msg, "const");
+          if(!is<List>(parseFun))
+            stop(msg, "parseFun");
+          if(!is<List>(help))
+            stop(msg, "help");
+          if(!is<List>(defaultVal))
+            stop(msg, "default");
+          if(!is<LogicalVector>(required))
+            stop("%s must be a logical vector when multiple arguments are supplied to add_argument", "required");
+          if(!ALTREP(name) &&
+             !ALTREP(narg) &&
+             !ALTREP(narg) &&
+             !ALTREP(meta) &&
+             !ALTREP(action) &&
+             !ALTREP(rawPassingOption) &&
+             !ALTREP(rawIngestionOption) &&
+             !ALTREP(helpFlags) &&
+             !ALTREP(flags)
+          ){
+            // If we are not working with ALTREP's we can abuse DATAPTR
+            SEXP *nameptr = STRING_PTR(name),
+              *nargptr = STRING_PTR(narg),
+              *metaptr = STRING_PTR(meta),
+              *actionptr = STRING_PTR(action),
+              *rawPassingOptionptr = STRING_PTR(rawPassingOption),
+              *rawIngestionOptionptr = STRING_PTR(rawIngestionOption),
+              *helpflagsptr = STRING_PTR(helpFlags),
+              *flagsptr = STRING_PTR(flags);
+              for(R_xlen_t i = 0; i < n;
+              i++,
+              nameptr++,
+              nargptr++,
+              metaptr++,
+              actionptr++,
+              rawPassingOptionptr++,
+              rawIngestionOptionptr++,
+              helpflagsptr++,
+              flagsptr++){
+                res.push_back(make_info_single( *nameptr,
+                                                *nargptr,
+                                                *metaptr,
+                                                *actionptr,
+                                                *rawPassingOptionptr,
+                                                *rawIngestionOptionptr,
+                                                *helpflagsptr,
+                                                *flagsptr,
+                                                VECTOR_ELT(choices, i),
+                                                VECTOR_ELT(parseFun, i),
+                                                VECTOR_ELT(help, i),
+                                                VECTOR_ELT(defaultVal, i),
+                                                VECTOR_ELT(constVal, i),
+                                                LOGICAL_ELT(required, i))); // <== LOGICAL_ELT returns int and not SEXP
+              }
+          }else{
+            for(R_xlen_t i = 0; i < n; i++){
+              res.push_back(make_info_single( STRING_ELT(name, i),
+                                              STRING_ELT(narg, i),
+                                              STRING_ELT(meta, i),
+                                              STRING_ELT(action, i),
+                                              STRING_ELT(rawPassingOption, i),
+                                              STRING_ELT(rawIngestionOption, i),
+                                              STRING_ELT(helpFlags, i),
+                                              STRING_ELT(flags, i),
+                                              VECTOR_ELT(choices, i),
+                                              VECTOR_ELT(parseFun, i),
+                                              VECTOR_ELT(help, i),
+                                              VECTOR_ELT(defaultVal, i),
+                                              VECTOR_ELT(constVal, i),
+                                              LOGICAL_ELT(required, i))); // <== LOGICAL_ELT returns int and not SEXP
             }
-            return out;
-
           }
         }
-
-        // No missing values. Match fields to names in listInfo and iterate over these.
-        vector<R_xlen_t> fieldsPositions(as<vector<R_xlen_t>>(hashTable.lookup(fields.get_ref())));
-        // Convert everything to "List" (should be constant time complexity).
-        // This allows standards subsetting for all arguments rather than using
-        // STRING_ELT, INTEGER_ELT, REAL_ELT etc.
-        List name = VECTOR_ELT(listInfo, fieldsPositions[0]),
-             narg = VECTOR_ELT(listInfo, fieldsPositions[1]),
-             meta = VECTOR_ELT(listInfo, fieldsPositions[2]),
-             action = VECTOR_ELT(listInfo, fieldsPositions[3]),
-             rawPassingOption = VECTOR_ELT(listInfo, fieldsPositions[4]),
-             rawIngestionOption = VECTOR_ELT(listInfo, fieldsPositions[5]),
-             helpFlags = VECTOR_ELT(listInfo, fieldsPositions[6]),
-             flags = VECTOR_ELT(listInfo, fieldsPositions[7]),
-             choices = VECTOR_ELT(listInfo, fieldsPositions[8]),
-             parseFun = VECTOR_ELT(listInfo, fieldsPositions[9]),
-             help = VECTOR_ELT(listInfo, fieldsPositions[10]),
-             defaultVal = VECTOR_ELT(listInfo, fieldsPositions[11]),
-             constVal = VECTOR_ELT(listInfo, fieldsPositions[12]),
-             required = VECTOR_ELT(listInfo, fieldsPositions[13]);
-        vector<argument_info> out;
-
-        for(R_xlen_t i = 0; i < n; n++){
-          out.push_back(make_info_single(name[i],
-                                         narg[i],
-                                         meta[i],
-                                         action[i],
-                                         rawPassingOption[i],
-                                         rawIngestionOption[i],
-                                         helpFlags[i],
-                                         flags[i],
-                                         choices[i],
-                                         parseFun[i],
-                                         help[i],
-                                         defaultVal[i],
-                                         constVal[i],
-                                         required[i]
-          ));
-        }
-        return out;
+        VOID_END_RCPP
+        return res;
       }
 
       inline vector<argument_info> make_argument_info_from_row_list(const SEXP& listInfo){
@@ -377,6 +581,7 @@ namespace cmd_args{
         }
         return out;
       }
+
     } // ~arguments
   } //  ~parser
 } // ~cmd_args
