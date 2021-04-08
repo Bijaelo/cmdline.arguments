@@ -38,7 +38,7 @@ add_argument <- function(parser,
                          action = 'store',
                          rawPassingOption = "vector_input",
                          rawIngestionOption = "combine",
-                         helpFlags = '-h/--help',
+                         helpFlags = '-h/--help', # This should probably not even be included.
                          choices = NULL,
                          parseFun = identity,
                          help = "I am a help message",

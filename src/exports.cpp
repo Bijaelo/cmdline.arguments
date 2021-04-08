@@ -265,7 +265,6 @@ extern "C" {
                      SEXP action,
                      SEXP rawPassingOption,
                      SEXP rawIngestionOption,
-                     SEXP helpFlags,
                      SEXP flags,
                      SEXP choices,
                      SEXP parseFun,
@@ -280,7 +279,6 @@ extern "C" {
                                           action,
                                           rawPassingOption,
                                           rawIngestionOption,
-                                          helpFlags,
                                           flags,
                                           choices,
                                           parseFun,
@@ -324,51 +322,6 @@ extern "C" {
     END_RCPP
   }
 
-  SEXP create_info(SEXP name,
-                   SEXP narg,
-                   SEXP meta,
-                   SEXP action,
-                   SEXP rawPassingOption,
-                   SEXP rawIngestionOption,
-                   SEXP helpFlags,
-                   SEXP flags,
-                   SEXP choices,
-                   SEXP parseFun,
-                   SEXP help,
-                   SEXP defaultVal,
-                   SEXP constVal,
-                   SEXP required){
-    BEGIN_RCPP
-    cmd_args::parser::argument::make_info_single(name,
-                                                 narg,
-                                                 meta,
-                                                 action,
-                                                 rawPassingOption,
-                                                 rawIngestionOption,
-                                                 helpFlags,
-                                                 flags,
-                                                 choices,
-                                                 parseFun,
-                                                 help,
-                                                 defaultVal,
-                                                 constVal,
-                                                 required);
-
-    END_RCPP
-    return wrap(R_NilValue);
-  }
-  SEXP create_info2(SEXP listInfo){
-    BEGIN_RCPP
-    make_argument_info_from_column_list(listInfo);
-    return wrap(R_NilValue);
-    END_RCPP
-  }
-  SEXP create_info3(SEXP listInfo){
-    BEGIN_RCPP
-    make_argument_info_from_row_list(listInfo);
-    return wrap(R_NilValue);
-    END_RCPP
-  }
 
 }
 
@@ -421,9 +374,10 @@ static const R_CallMethodDef CallEntries[] = {
   {"raw_container_extract", (DL_FUNC) &raw_container_extract, 1},
 
   //{"create_info", (DL_FUNC) &create_info, 14},
+  CALLDEF(make_argument, 13),
 
 
-  {"make_argument", (DL_FUNC) &make_argument, 14},
+  //{"make_argument", (DL_FUNC) &make_argument, 13},
   {"check_argument_single", (DL_FUNC) &check_argument_single, 1},
   {"make_argument_multiple", (DL_FUNC) &make_argument_multiple, 1},
   {"check_argument_multiple", (DL_FUNC) &check_argument_multiple, 1},

@@ -6,7 +6,9 @@ namespace cmd_args::utils::Rapi{
   namespace utils{
     namespace Rapi{
       //template <typename T>
-      bool cmd_ISNULL(SEXP);
+      inline bool cmd_ISNULL(SEXP x){
+        return x == R_NilValue || TYPEOF(x) == NILSXP;;
+      }
     }
   }
 }

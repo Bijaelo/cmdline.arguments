@@ -1,7 +1,8 @@
 # Default make file
-PKG_CPPFLAGS=-I.
+PKG_CPPFLAGS=-I. -I../inst/include/
 
 CXX_STD = CXX20
+
 
 # Include all C++ files in src/ and its subdirectories: src/*
 SOURCES=exports.cpp parser/argument/class.cpp parser/argument/raw/class.cpp parser/narg/narg.cpp parser/pfunc/pfunc.cpp utils/converters/converters.cpp utils/Rapi.cpp utils/type_name/type_name.cpp

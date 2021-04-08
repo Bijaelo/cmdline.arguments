@@ -48,6 +48,6 @@ namespace cmd_args{
 
 // pairlist(ArgumentList) has to be loaded here. Otherwise we throw wrap error.
 // (cannot convert ArgumentList to SEXP)
-#include "RcppApi/pairlist.h"
+#include <cmd_args/RcppApi/pairlist.h>
 
 #endif

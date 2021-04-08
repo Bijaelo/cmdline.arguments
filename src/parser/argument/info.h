@@ -13,9 +13,11 @@
 #include <map>
 #include <utility>
 #include "utils/sugar.h"
+#include "utils/macros.h"
 using namespace std;
 using namespace Rcpp;
 using namespace cmd_args::utils::sugar;
+using namespace cmd_args::utils::macros;
 
 namespace cmd_args{
   namespace parser{
@@ -48,6 +50,7 @@ namespace cmd_args{
           constVal;
 
         bool required;
+
         argument_info(){};
         argument_info(const argument_info& x):
           name(x.name),
@@ -93,18 +96,35 @@ namespace cmd_args{
           constVal(CONSTVAL),
           required(REQUIRED)
         {}
+        argument_info(string NAME,
+                      string NARG,
+                      string META,
+                      string ACTION,
+                      string RAWPASSINGOPTION,
+                      string RAWINGESTIONOPTION,
+                      vector<string> FLAGS,
+                      vector<string> CHOICES,
+                      RObject PARSEFUN,
+                      RObject HELP,
+                      RObject DEFAULTVAL,
+                      RObject CONSTVAL,
+                      bool REQUIRED):
+          name(NAME),
+          narg(NARG),
+          meta(META),
+          action(ACTION),
+          rawPassingOption(RAWPASSINGOPTION),
+          rawIngestionOption(RAWINGESTIONOPTION),
+          flags(FLAGS),
+          choices(CHOICES),
+          parseFun(PARSEFUN),
+          help(HELP),
+          defaultVal(DEFAULTVAL),
+          constVal(CONSTVAL),
+          required(REQUIRED)
+        {}
       };
 
-      // Rcpp version of anyNA (does not seem to exist in Rcpp) (removed as it is slower than calling R's internal function.)
-/*      template<typename T, typename S>
-      bool any_na(S x){
-        T xx = as<T>(x);
-        for(auto i: xx){
-          if(T::is_na(i))
-            return true;
-        }
-        return false;
-      }*/
       /* Wrappers for creating argument_info and checking input type.
        *
        * Create a single instance of "argument_info" checking that each element
@@ -120,7 +140,6 @@ namespace cmd_args{
                                             const SEXP& action,
                                             const SEXP& rawPassingOption,
                                             const SEXP& rawIngestionOption,
-                                            const SEXP& helpFlags,
                                             const SEXP& flags,
                                             const SEXP& choices,
                                             const SEXP& parseFun,
@@ -128,43 +147,39 @@ namespace cmd_args{
                                             const SEXP& defaultVal,
                                             const SEXP& constVal,
                                             const bool& required){
-        if(!is<String>(name) || as<String>(name) == NA_STRING)
+        if(!is_StringOrCharAndNotNA(name))
           stop("argument name must be a single string");
         string stringName = as<string>(name);
-        if(!is<String>(narg) || as<String>(narg) == NA_STRING)
+        if(!is_StringOrCharAndNotNA(narg))
           stop("narg must be one of [%s] where N is a positive integer.",
                "\"?\", \"-\", \"+\", \"*\", \"N\", \"N-\", \"N+\"");
         string stringNarg = as<string>(narg),
           stringMeta;
-        if(!is<String>(meta) || as<String>(meta) == NA_STRING){
+        if(!is_StringOrCharAndNotNA(meta)){
           // Default meta to capitalized name
           stringMeta = stringName;
-          transform(stringMeta.begin(), stringMeta.end(), stringMeta.begin(), [](unsigned char c){return toupper(c);});
+          transform(stringMeta.begin(), stringMeta.end(), stringMeta.begin(),
+                    [](unsigned char c){return toupper(c);});
         }else
           stringMeta = as<string>(meta);
-        if(!is<String>(action) || as<String>(action) == NA_STRING)
+        if(!is_StringOrCharAndNotNA(action))
           stop("action must be one of (%s).",
                "\"store[_value]\", \"const\", \"store_true\", \"store_false\"");
         string stringAction = as<string>(action);
-        if(!is<String>(rawPassingOption) || as<String>(rawPassingOption) == NA_STRING)
+        if(!is_StringOrCharAndNotNA(rawPassingOption))
           stop("Undefined input type provided [Given=%s, valid={%s}].",
                      "Unknown-non-string-type",
                      "individual[_type], vector[_type], list[_type]");
         string stringRawPassingOption = as<string>(rawPassingOption);
-        if(!is<String>(rawIngestionOption) || as<String>(rawIngestionOption) == NA_STRING)
+        if(!is_StringOrCharAndNotNA(rawIngestionOption))
           stop("Undefined option specified for handling of flags provided multiple times [Given=%s, valid={%s}]",
                      "Unknown-non-string-type",
                      "individual, vector, combine");
         string stringRawIngestionOption = as<string>(rawIngestionOption);
-        /* Maybe I'll enforce this, maybe not. It doesnt seem sensible to enforce right now.
-        if(!is<String>(helpFlags) || as<String>(helpFlags) == NA_STRING)
-          stop("unexpected error, no flags for \"help\" was found. Please report this issue to the package github with an example for reproducing this error.");
-        */
-        string stringHelpFlags = as<string>(helpFlags);
         vector<string> vectorFlags;
         Function any_na("anyNA"); // Faster than the Rcpp implementation. Not exactly sure why.
         if(!is<CharacterVector>(flags) || as<bool>(any_na(flags))){
-          if(!is<String>(flags) || as<String>(flags) == NA_STRING)
+          if(!is_StringOrCharAndNotNA(flags))
             stop("\"flags\" must be a Character vector.");
           vectorFlags = {as<string>(flags)};
         }else
@@ -174,10 +189,10 @@ namespace cmd_args{
           vectorChoices = as<vector<string>>(choices);
         else if(!Rf_isNull(choices))
           stop("Currently choices must be a character vector or NULL. This may change in the future when a reasonable implementation has been thought of. Contributions are welcome.");
-        if((!is<String>(parseFun) || as<String>(parseFun) == NA_STRING) && !is<Function>(parseFun))
+        if(!is_StringOrCharAndNotNA(parseFun) && !is<Function>(parseFun))
           stop("parseFun must be either a single string or a callable function.");
         RObject RObjectParseFun = as<RObject>(parseFun);
-        if((!is<String>(help) || as<String>(help) == NA_STRING) && !is<Function>(help))
+        if(!is_StringOrCharAndNotNA(help) && !is<Function>(help))
           stop("help must either be a string message or a callable function.");
         // defaultVal and constVal can be anything so no checkin
         RObject RObjectHelp = as<RObject>(help),
@@ -189,7 +204,6 @@ namespace cmd_args{
                              stringAction,
                              stringRawPassingOption,
                              stringRawIngestionOption,
-                             stringHelpFlags,
                              vectorFlags,
                              vectorChoices,
                              RObjectParseFun,
@@ -205,7 +219,6 @@ namespace cmd_args{
                                             const SEXP& action,
                                             const SEXP& rawPassingOption,
                                             const SEXP& rawIngestionOption,
-                                            const SEXP& helpFlags,
                                             const SEXP& flags,
                                             const SEXP& choices,
                                             const SEXP& parseFun,
@@ -221,7 +234,6 @@ namespace cmd_args{
                                 action,
                                 rawPassingOption,
                                 rawIngestionOption,
-                                helpFlags,
                                 flags,
                                 choices,
                                 parseFun,
@@ -236,7 +248,6 @@ namespace cmd_args{
                                             const SEXP& action,
                                             const SEXP& rawPassingOption,
                                             const SEXP& rawIngestionOption,
-                                            const SEXP& helpFlags,
                                             const SEXP& flags,
                                             const SEXP& choices,
                                             const SEXP& parseFun,
@@ -250,7 +261,6 @@ namespace cmd_args{
                                 action,
                                 rawPassingOption,
                                 rawIngestionOption,
-                                helpFlags,
                                 flags,
                                 choices,
                                 parseFun,
@@ -265,7 +275,6 @@ namespace cmd_args{
                                              "action",
                                              "rawPassingOption",
                                              "rawIngestionOption",
-                                             "helpFlags",
                                              "flags",
                                              "choices",
                                              "parseFun",
@@ -275,22 +284,6 @@ namespace cmd_args{
                                              "required"};
 
 
-// Macro for generating NA string vector.
-// The protect "should" be unnecessary. But rather safe than sorry.
-#define repn(where, what, n) do {                              \
-      PROTECT(where = Rf_allocVector(STRSXP, n));              \
-      ptr = STRING_PTR(where);                                 \
-      for(R_xlen_t i = 0; i < n; i++, ptr++)                   \
-        *ptr = what;                                           \
-      nprot++;                                                 \
-} while (0)
-
-// Small
-#define nList(where, n) do{                                    \
-      where = PROTECT(Rf_allocVector(VECSXP, n));              \
-      nprot++;                                                 \
-} while (0);                                                   \
-//
 
 
       inline void assignInfo(SEXP& where, const SEXP& listInfo, R_xlen_t& j){
@@ -300,9 +293,10 @@ namespace cmd_args{
       }
       // Used for "in(x, table)" and "match(x, table)", to avoid constructing hash tables multiple times.
       typedef Rcpp::sugar::IndexHash<STRSXP> strHASH;
+
       inline vector<argument_info> make_argument_info_from_column_list(const SEXP& listInfo){
+        BEGIN_RCAPI
         vector<argument_info> res;
-        BEGIN_RCPP
         if(TYPEOF(listInfo) != VECSXP)
           stop("Unexpected error: non-list passed to make_argument_info_from_column_list");
         SEXP names = Rf_getAttrib(listInfo, R_NamesSymbol); // Automatically protected
@@ -317,7 +311,7 @@ namespace cmd_args{
         // Use STRING_PTR as we already know the names is not NULL (eg: safe).
         SEXP* namePtr = STRING_PTR(names);
         R_xlen_t n = -1;
-        for(R_xlen_t i = Rf_xlength(listInfo); i >= 0; i--) // Find name length.
+        for(R_xlen_t i = Rf_xlength(listInfo) - 1; i >= 0; i--) // Find name length.
           if(strcmp(CHAR(namePtr[i]), "name") == 0){
             n = Rf_xlength(VECTOR_ELT(listInfo, i));
             break;
@@ -334,7 +328,6 @@ namespace cmd_args{
          action,
          rawPassingOption,
          rawIngestionOption,
-         helpFlags,
          flags,
          choices,
          parseFun,
@@ -366,8 +359,6 @@ namespace cmd_args{
                 constVal = R_NilValue;
               }else if(iString == "action"){
                 repn(meta, wrap("store"), 1);
-              }else if(iString == "helpFlags"){
-                helpFlags = NA_STRING;
               }else if(iString == "defaultVal"){
                 defaultVal = R_NilValue;
               }else if(iString == "rawPassingOption"){
@@ -375,8 +366,7 @@ namespace cmd_args{
               }else if(iString == "rawIngestionOption"){
                 repn(rawPassingOption, wrap("vector"), 1); // default to vector
               }else if(iString == "required"){
-                required = PROTECT(Rf_allocVector(LGLSXP, 1));
-                nprot++;
+                PROTECT_CMD(required = Rf_allocVector(LGLSXP, 1));
                 SET_LOGICAL_ELT(required, 0, FALSE);
               }else
                 stop("Missing required parameter %s in argument list", iString);
@@ -389,21 +379,19 @@ namespace cmd_args{
             assignInfo(action, listInfo, fieldsPositions[3]);
             assignInfo(rawPassingOption, listInfo, fieldsPositions[4]);
             assignInfo(rawIngestionOption, listInfo, fieldsPositions[5]);
-            assignInfo(helpFlags, listInfo, fieldsPositions[6]);
-            assignInfo(flags, listInfo, fieldsPositions[7]);
-            assignInfo(choices, listInfo, fieldsPositions[8]);
-            assignInfo(parseFun, listInfo, fieldsPositions[9]);
-            assignInfo(help, listInfo, fieldsPositions[10]);
-            assignInfo(defaultVal, listInfo, fieldsPositions[11]);
-            assignInfo(constVal, listInfo, fieldsPositions[12]);
-            assignInfo(required, listInfo, fieldsPositions[13]);
+            assignInfo(flags, listInfo, fieldsPositions[6]);
+            assignInfo(choices, listInfo, fieldsPositions[7]);
+            assignInfo(parseFun, listInfo, fieldsPositions[8]);
+            assignInfo(help, listInfo, fieldsPositions[9]);
+            assignInfo(defaultVal, listInfo, fieldsPositions[10]);
+            assignInfo(constVal, listInfo, fieldsPositions[11]);
+            assignInfo(required, listInfo, fieldsPositions[12]);
             res.push_back(make_info_single(name,
                                           narg,
                                           meta,
                                           action,
                                           rawPassingOption,
                                           rawIngestionOption,
-                                          helpFlags,
                                           flags,
                                           choices,
                                           parseFun,
@@ -426,8 +414,6 @@ namespace cmd_args{
                 nList(constVal, n);
               }else if(iString == "action"){
                 repn(meta, wrap("store"), n);
-              }else if(iString == "helpFlags"){
-                repn(helpFlags, NA_STRING, n);
               }else if(iString == "defaultVal"){
                 nList(defaultVal, n);
               }else if(iString == "rawPassingOption"){
@@ -435,8 +421,7 @@ namespace cmd_args{
               }else if(iString == "rawIngestionOption"){
                 repn(rawPassingOption, wrap("vector"), n); // default to vector
               }else if(iString == "required"){
-                required = PROTECT(Rf_allocVector(LGLSXP, n));
-                nprot++;
+                PROTECT_CMD(required = Rf_allocVector(LGLSXP, n));
                 for(R_xlen_t i = 0; i < n; i++)
                   SET_LOGICAL_ELT(required, i, FALSE);
               }else
@@ -453,14 +438,13 @@ namespace cmd_args{
           assignInfo(action, listInfo, fieldsPositions[3]);
           assignInfo(rawPassingOption, listInfo, fieldsPositions[4]);
           assignInfo(rawIngestionOption, listInfo, fieldsPositions[5]);
-          assignInfo(helpFlags, listInfo, fieldsPositions[6]);
-          assignInfo(flags, listInfo, fieldsPositions[7]);
-          assignInfo(choices, listInfo, fieldsPositions[8]);
-          assignInfo(parseFun, listInfo, fieldsPositions[9]);
-          assignInfo(help, listInfo, fieldsPositions[10]);
-          assignInfo(defaultVal, listInfo, fieldsPositions[11]);
-          assignInfo(constVal, listInfo, fieldsPositions[12]);
-          assignInfo(required, listInfo, fieldsPositions[13]);
+          assignInfo(flags, listInfo, fieldsPositions[6]);
+          assignInfo(choices, listInfo, fieldsPositions[7]);
+          assignInfo(parseFun, listInfo, fieldsPositions[8]);
+          assignInfo(help, listInfo, fieldsPositions[9]);
+          assignInfo(defaultVal, listInfo, fieldsPositions[10]);
+          assignInfo(constVal, listInfo, fieldsPositions[11]);
+          assignInfo(required, listInfo, fieldsPositions[12]);
           // Check input types are correct.
           auto msg = "%s must be a character vector when multiple arguments are supplied to add_argument";
           if(!is<CharacterVector>(name)) // 1
@@ -475,10 +459,6 @@ namespace cmd_args{
             stop(msg, "rawPassingOption");
           if(!is<CharacterVector>(rawIngestionOption))
             stop(msg, "rawIngestionOption");
-          if(!is<CharacterVector>(helpFlags))
-            stop(msg, "helpFlags");
-          if(!is<CharacterVector>(flags))
-            stop(msg, "flags");
           msg = "%s must be a list when multiple arguments are supplied to add_argument";
           if(!is<List>(choices))
             stop(msg, "choices");
@@ -486,12 +466,17 @@ namespace cmd_args{
             stop(msg, "const");
           if(!is<List>(parseFun))
             stop(msg, "parseFun");
-          if(!is<List>(help))
-            stop(msg, "help");
           if(!is<List>(defaultVal))
             stop(msg, "default");
           if(!is<LogicalVector>(required))
             stop("%s must be a logical vector when multiple arguments are supplied to add_argument", "required");
+          msg = "%s must be either a character vector or a list of character vectors when multiple arguments are supplied to add_argument";
+          if(!is<CharacterVector>(help) && !is<List>(help))
+            stop(msg, "help");
+          std::function<SEXP(SEXP&, R_xlen_t&)> helpSub = ((is<CharacterVector>(help)) ? STRING_ELT : VECTOR_ELT);
+          if(!is<CharacterVector>(flags) && !is<List>(flags))
+            stop(msg, "flags");
+          std::function<SEXP(SEXP&, R_xlen_t&)> flagSub = ((is<CharacterVector>(flags)) ? STRING_ELT : VECTOR_ELT);
           if(!ALTREP(name) &&
              !ALTREP(narg) &&
              !ALTREP(narg) &&
@@ -499,7 +484,6 @@ namespace cmd_args{
              !ALTREP(action) &&
              !ALTREP(rawPassingOption) &&
              !ALTREP(rawIngestionOption) &&
-             !ALTREP(helpFlags) &&
              !ALTREP(flags)
           ){
             // If we are not working with ALTREP's we can abuse DATAPTR
@@ -508,9 +492,7 @@ namespace cmd_args{
               *metaptr = STRING_PTR(meta),
               *actionptr = STRING_PTR(action),
               *rawPassingOptionptr = STRING_PTR(rawPassingOption),
-              *rawIngestionOptionptr = STRING_PTR(rawIngestionOption),
-              *helpflagsptr = STRING_PTR(helpFlags),
-              *flagsptr = STRING_PTR(flags);
+              *rawIngestionOptionptr = STRING_PTR(rawIngestionOption);
               for(R_xlen_t i = 0; i < n;
               i++,
               nameptr++,
@@ -518,20 +500,17 @@ namespace cmd_args{
               metaptr++,
               actionptr++,
               rawPassingOptionptr++,
-              rawIngestionOptionptr++,
-              helpflagsptr++,
-              flagsptr++){
+              rawIngestionOptionptr++){
                 res.push_back(make_info_single( *nameptr,
                                                 *nargptr,
                                                 *metaptr,
                                                 *actionptr,
                                                 *rawPassingOptionptr,
                                                 *rawIngestionOptionptr,
-                                                *helpflagsptr,
-                                                *flagsptr,
+                                                flagSub(flags, i),
                                                 VECTOR_ELT(choices, i),
                                                 VECTOR_ELT(parseFun, i),
-                                                VECTOR_ELT(help, i),
+                                                helpSub(help, i),
                                                 VECTOR_ELT(defaultVal, i),
                                                 VECTOR_ELT(constVal, i),
                                                 LOGICAL_ELT(required, i))); // <== LOGICAL_ELT returns int and not SEXP
@@ -544,18 +523,17 @@ namespace cmd_args{
                                               STRING_ELT(action, i),
                                               STRING_ELT(rawPassingOption, i),
                                               STRING_ELT(rawIngestionOption, i),
-                                              STRING_ELT(helpFlags, i),
-                                              STRING_ELT(flags, i),
+                                              flagSub(flags, i),
                                               VECTOR_ELT(choices, i),
                                               VECTOR_ELT(parseFun, i),
-                                              VECTOR_ELT(help, i),
+                                              helpSub(help, i),
                                               VECTOR_ELT(defaultVal, i),
                                               VECTOR_ELT(constVal, i),
                                               LOGICAL_ELT(required, i))); // <== LOGICAL_ELT returns int and not SEXP
             }
           }
         }
-        VOID_END_RCPP
+        END_RCAPI
         return res;
       }
 
@@ -566,6 +544,8 @@ namespace cmd_args{
         SEXP names = Rf_getAttrib(listInfo, R_NamesSymbol);
         if(!Rf_isNull(names))
           return make_argument_info_from_column_list(listInfo);
+        if(!same_lengths(listInfo))
+          stop("All elements in add_argument row-list must have same length");
         vector<argument_info> intermediary, out;
         auto back = back_inserter(out);
         R_xlen_t n = Rf_xlength(listInfo);

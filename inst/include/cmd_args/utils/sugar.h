@@ -5,6 +5,7 @@
 #include <Rcpp.h>
 #include <list>
 using namespace Rcpp;
+
 namespace cmd_args{
   namespace utils{
     namespace sugar{
@@ -91,6 +92,38 @@ namespace cmd_args{
         }else if(type == LISTSXP)
           stop("Lengths not defined for pairlists");
         return true;
+      }
+
+      template<typename T>
+      inline bool is_StringOrChar(const T& x){
+        return is_StringOrChar(wrap(x));
+      }
+
+      template<>
+      inline bool is_StringOrChar(const SEXP& x){
+        int n = Rf_xlength(x);
+        if(n > 1)
+          return false;
+        int type = TYPEOF(x);
+        if(type != STRSXP && type != CHARSXP)
+          return false;
+        return true;
+      }
+
+      inline bool is_StringOrCharAndNotNA(const SEXP& x){
+        int type = TYPEOF(x);
+        if(type == STRSXP){
+          if(Rf_xlength(x) > 1)
+            return false;
+          if(STRING_PTR(x)[0] == NA_STRING)
+            return false;
+          return true;
+        }else if(type == CHARSXP){
+          if(x == NA_STRING)
+            return false;
+          return true;
+        }
+        return false;
       }
     }
   }

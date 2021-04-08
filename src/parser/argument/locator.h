@@ -5,7 +5,7 @@
 #include <string>
 #include <list>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <algorithm>
 
 using namespace std;
@@ -21,7 +21,7 @@ namespace cmd_args{
     class argument_locator {
       const vector<string> rawArgs; // input vector
       list<vector<string>> lookups_list; // lookup values.
-      map<string, list<vector<string>>> argLookup; // container for parsed arguments
+      unordered_map<string, list<vector<string>>> argLookup; // container for parsed arguments
 
       // Check a single argument to see if it contains a flag identifier
       inline bool isFlag(const string& arg) const {
