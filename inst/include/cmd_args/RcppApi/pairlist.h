@@ -24,30 +24,41 @@
 #ifndef cmdline_args_pairlist_h
 #define cmdline_args_pairlist_h
 
-#include "utils/ArgumentList.h"
+#include <cmd_args/utils/ArgumentList.h>
 
 namespace Rcpp{
   template<>
   inline SEXP pairlist(const cmd_args::utils::ArgumentList& t1){
-    // code mostly taken from do_docall
-    // Not sure why this one is complaining about it not being a union type?
+    // code mostly taken from do_docall, but loop split in case for no names.
     Rcpp::List data = t1.data;
     R_xlen_t n = data.size();
     SEXP tail, walker;
     PROTECT(tail = walker = Rf_allocList(n));
-    SEXP names = data.names();
-    if(Rf_length(names) == 0){
+    const SEXP names = data.names();
+    if(names == R_NilValue){
       for(R_xlen_t i = 0; i < n; i++){
         SETCAR(walker, data[i]);
         walker = CDR(walker);
       }
     }else{
-      for(R_xlen_t i = 0; i < n; i++){
-        SETCAR(walker, data[i]);
-        SEXP namei = STRING_ELT(names, i);
-        if(namei != R_NilValue && CHAR(namei)[0] != '\0')
-          SET_TAG(walker, Rf_installTrChar(namei));
-        walker = CDR(walker);
+      // For altreps we cant use pointers, and have to substr
+      if(ALTREP(names)){
+        for(R_xlen_t i = 0; i < n; i++){
+          SETCAR(walker, data[i]);
+          const SEXP namei = ALTSTRING_ELT(names, i);
+          if(namei != R_NilValue && CHAR(namei)[0] != '\0')
+            SET_TAG(walker, Rf_installTrChar(namei));
+          walker = CDR(walker);
+        }
+      }else{
+        SEXP* nameptr = STRING_PTR(names);
+        for(R_xlen_t i = 0; i < n; i++, nameptr++){
+          SETCAR(walker, data[i]);
+          const SEXP namei = *nameptr;
+          if(namei != R_NilValue && CHAR(namei)[0] != '\0')
+            SET_TAG(walker, Rf_installTrChar(namei));
+          walker = CDR(walker);
+        }
       }
     }
     UNPROTECT(1);

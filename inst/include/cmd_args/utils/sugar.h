@@ -125,6 +125,11 @@ namespace cmd_args{
         }
         return false;
       }
+
+      inline bool cmd_ISNULL(SEXP x){
+        return x == R_NilValue || TYPEOF(x) == NILSXP;;
+      }
+
     }
   }
 }
