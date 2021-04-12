@@ -3,28 +3,35 @@
 #ifndef cmd_args_argument_locator_h
 #define cmd_args_argument_locator_h
 #include <string>
+#include <string_view>
 #include <list>
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
-
+#include <iterator>
 using namespace std;
+
+
+#include <Rcpp.h>
 /* argument_locator class
  *
  * Takes in a vector of strings (commandline arguments) and
  * locates positional and flagged arguments without caring for their "validity".
  * Location is based on second argument "lookUps".
+ *
+ *
+ * It needs an iterator to argLookup
  */
 namespace cmd_args{
   namespace parser{
 
     class argument_locator {
-      const vector<string> rawArgs; // input vector
+      vector<string> rawArgs; // input vector
       list<vector<string>> lookups_list; // lookup values.
       unordered_map<string, list<vector<string>>> argLookup; // container for parsed arguments
 
       // Check a single argument to see if it contains a flag identifier
-      inline bool isFlag(const string& arg) const {
+      inline bool isFlag(const string_view arg) const {
         string subArg;
         size_t strSize = arg.size();
         // Iterate over all "sizes" of lookups (likely "-" and "--", but we allow more)
@@ -56,9 +63,9 @@ namespace cmd_args{
       inline void find_positionals(vector<string>::const_iterator& start,
                                    vector<string>::const_iterator& end) {
         find_next_flag(start, end);
-        auto b =  rawArgs.begin();
+        auto b =  rawArgs.cbegin();
         if(start != b){
-          vector<string> positionals(rawArgs.begin(), start);
+          vector<string> positionals(b, start);
           positionals.shrink_to_fit(); // we know it will never need more space.
           // Maybe there's a better way to do this.. But this work.. I'll trust the compiler.
           list<vector<string>> posList;
@@ -106,27 +113,50 @@ namespace cmd_args{
       // so cannot pass by reference
       argument_locator(const vector<string> args, vector<string>& _lookups):
          rawArgs(args){
-
+          parse(_lookups);
           // generate lookup list sorted by size.
-          sort(_lookups.begin(), _lookups.end());
-          size_t curSize = 0;
-          vector<string> curLookup;
-          for(auto i : _lookups){
-            if(i.size() != curSize){
-              lookups_list.push_back(curLookup);
-              curLookup.clear();
-            }
-            curLookup.push_back(i);
-          }
-          if(curLookup.size() > 0)
-            lookups_list.push_back(curLookup);
-          // Find flags
-
-          vector<string>::const_iterator start = rawArgs.begin(),
-                                         end = rawArgs.end();
-          find_positionals(start, end);
-          find_flags(start, end);
         };
+      // Default constructor...
+      argument_locator(const vector<string> args):rawArgs(args){};
+
+      /*inline void add(const vector<string> args){
+        rawArgs.insert(rawArgs.end(), args.begin(), args.end());
+      }*/
+
+      inline void parse(vector<string>& _lookups){
+        struct {
+          bool operator()(const string& a, const string& b){
+            return a.size() > b.size();
+          }
+        } sort_by_size;
+
+
+        sort(_lookups.begin(), _lookups.end(), sort_by_size);
+        size_t curSize = 0;
+        vector<string> curLookup;
+        // This should be changed to use unordered_set instead. (Maybe even boost::unordered_set? Seems to support non-copy find/contains.)
+        // Should allow for significantly faster string comparison. (Linear right now vs potentially constant later. Also removes duplicates.)
+        auto  b = _lookups.begin(), e = _lookups.end();
+        curSize = b->size();
+        curLookup.push_back(*b);
+        b++;
+        for(; b!=e; b++){
+          if(b -> size() != curSize){
+            lookups_list.push_back(curLookup);
+            curLookup.clear();
+          }
+          curLookup.push_back(*b);
+        }
+        if(curLookup.size() > 0)
+          lookups_list.push_back(curLookup);
+        // Find flags
+
+        vector<string>::const_iterator start = rawArgs.begin(),
+          end = rawArgs.end();
+        find_positionals(start, end);
+        find_flags(start, end);
+      }
+
       /* Pop out an element from argLookup, removing the element from argLookup
        *
        * @param key - A key to "find".
@@ -171,11 +201,24 @@ namespace cmd_args{
   #if __cpluplus > 201703L // contains doesn't exist before c++20, and potentially not in some compilers (guarded).
         return argLookup.contains(key);
   #else
-        return argLookup.count(key) != 0; // because: https://stackoverflow.com/a/15792245/10782538
+        return argLookup.count(key) != 0; // Based on suggestions from: https://stackoverflow.com/a/15792245/10782538
   #endif
       }
+      // Allow for simple iteration through arguments.
+      unordered_map<string, list<vector<string>>>::iterator begin(){
+        return argLookup.begin();
+      }
+      unordered_map<string, list<vector<string>>>::const_iterator cbegin(){
+        return argLookup.cbegin();
+      }
+      unordered_map<string, list<vector<string>>>::iterator end(){
+        return argLookup.end();
+      }
+      unordered_map<string, list<vector<string>>>::const_iterator cend(){
+        return argLookup.cend();
+      }
 
-  };
+    };
   } // ~parser
 } // ~cmd_args
 #endif

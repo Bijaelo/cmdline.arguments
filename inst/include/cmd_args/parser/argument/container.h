@@ -8,20 +8,21 @@
 
 #include <string>
 #include <unordered_map>
+#include <cmd_args/parser/argument/locator.h>
 
 namespace cmd_args::parser{
-  class argument_locator;
   namespace argument{
-    class argument; // remove later on for compiler optimizations
-    class argument_container {
-
-    public:
-      argument_container() = default;
-      argument_container(argument_container& rhs) = default;
-      argument_container(argument_container&& rhs) = default;
+    struct argument_container {
+      argument_locator parser;
+      // Problem: I don't know the markers beforehand, so argument_locator needs a default constructor
+      /* Currently trying to make a patch for this in locator.h
+       * But for some reason removing const from rawArgs causes all sorts of problems with no matching call.
+       * So I will have to look into this a bit.
+       */
+      argument_container(vector<string> rawArgs, vector<string> flags):parser(rawArgs){}
 
     private:
-      std::unordered_map<std::string, argument> args;
+
     };
   }
 }
