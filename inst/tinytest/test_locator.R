@@ -1,3 +1,5 @@
+if(is.null(Sys.getenv('CMD_ARG_ALL_TEST')))
+  exit_file("Set CMD_ARG_ALL_TEST environment variable to run these tests in this file.")
 
 Rcpp::sourceCpp("cpp/locator.cpp")
 
@@ -5,9 +7,9 @@ Rcpp::sourceCpp("cpp/locator.cpp")
 ## Setup ##
 ###     ###
 
-# Simple case no weirdness
+# Simple case no weirdness, except for the '--fool=34' to test if equal signs work as expected
 case1 <-
-  list(args = c('-f', '--fool', 'abc', 'dfd', 'cc', '--good', 'ad', '3', '4', '--fool', '44', '-h'),
+  list(args = c('-f', '--fool=34', 'abc', 'dfd', 'cc', '--good', 'ad', '3', '4', '--fool', '44', '-h'),
        flags = c('-', '--'))
 
 # Other case, weird flags supplied
@@ -34,7 +36,7 @@ XPtr2 <- test_initializer(case2[['args']], case2[['flags']])
 XPtr3 <- test_initializer(case3[['args']], case3[['flags']])
 # Test get
 
-expect_identical(test_get(XPtr1, '--fool'), list(c('abc', 'dfd', 'cc'), c('44')))
+expect_identical(test_get(XPtr1, '--fool'), list(c('34', 'abc', 'dfd', 'cc'), c('44')))
 
 expect_identical(test_get(XPtr1, '--ds'), list())
 
@@ -67,7 +69,7 @@ expect_identical(test_iterate(XPtr1),
                  list(list('-h',list(character())),
                       list('--good', list(c('ad', '3', '4'))),
                       list('-f', list(character())),
-                      list('--fool', list(c('abc', 'dfd', 'cc'),
+                      list('--fool', list(c('34', 'abc', 'dfd', 'cc'),
                                           c('44')))))
 
 # Clean the environment

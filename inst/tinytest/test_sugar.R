@@ -1,3 +1,5 @@
+if(is.null(Sys.getenv('CMD_ARG_ALL_TEST')))
+  exit_file("Set CMD_ARG_ALL_TEST environment variable to run these tests in this file.")
 
 
 # TinyTest for <cmd_args/utils/sugar.h>

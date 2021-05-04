@@ -11,6 +11,22 @@
 #ifndef cmd_args_macros
 #define cmd_args_macros
 
+
+
+// We have some minor optimization that is obtained after gcc 11 and clang 12
+#ifdef __GNUC__
+#define CMD_GCC_VERSION __GNUC__
+#else
+#define CMD_GCC_VERSION 0
+#endif
+
+#ifdef __clang__
+#define CMD_CLANG_VERSION __clang_major__
+#else
+#define CMD_CLANG_VERSION 0
+#endif
+
+
 namespace cmd_args::utils::macros{
   // Macros for slightly simpler protection and unprotection.
   #ifndef BEGIN_RCAPI

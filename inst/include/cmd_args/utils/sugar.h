@@ -4,6 +4,8 @@
 
 #include <Rcpp.h>
 #include <list>
+#include <string>
+#include <cmd_args/utils/type_name.h>
 using namespace Rcpp;
 
 namespace cmd_args{
@@ -125,6 +127,20 @@ namespace cmd_args{
         }
         return false;
       }
+      template<typename T>
+      inline bool is(const SEXP& x){
+        Rcpp::stop("Error in \"is<T>(x)\" undefined type T: %s", "const SEXP&");
+      }
+      template<>
+      inline bool is<bool>(const SEXP& x){
+        return Rcpp::is<bool>(x);
+      }
+
+      template<>
+      inline bool is<string>(const SEXP& x){
+        return is_StringOrChar(x);
+      }
+
 
       inline bool cmd_ISNULL(SEXP x){
         return x == R_NilValue || TYPEOF(x) == NILSXP;;

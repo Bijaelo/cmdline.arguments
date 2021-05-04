@@ -21,6 +21,8 @@ namespace cmd_args{
      * there is enough demand.
      * T V is a default value for T.
      *
+     *
+     *
      * Example usage below the definition and in tinytest/cpp/options.cpp
      */
     template<typename T, T V>
@@ -29,31 +31,59 @@ namespace cmd_args{
       static const std::unordered_map<char, T> mapper;
       T option = V;
 
-      const string errmsg; // Needed message
+      const string errmsg{"Undefined option provided [Given=%s, valid={%s}]"}; // Needed message. Should never be
 
       // For error message printing, we need to extract mapper values.
-      std::string Options(){
+      std::string Options() const {
         std::string res;
         for(auto& [key, value] : mapper){
           res += key;
           res += ", ";
         }
-        return res.substr(0, res.size() - 3);
+        return res.substr(0, res.size() - 2);
       }
 
       template<typename t>
-      const void throwerr(const t& v) const{
+      const void throwerr(const t& v){
         Rcpp::stop(errmsg.c_str(),
-                   v);
+                   v,
+                   Options());
       }
     public:
+      /* Constructor overload
+       *
+       * @details This overload provides a method for creating an option with both an Option in addition to a custom
+       * error message.
+       *
+       * @option string& _option Option
+       * @param string _errmsg error message used for printing when inappropriate options are provided. " [Given=%s, valid={%s}]" is added to the
+       * argument
+       */
       Option(const string& _option, const string _errmsg) : errmsg(_errmsg + " [Given=%s, valid={%s}]"){
         add(_option);
       }
 
+      /* Constructor overload
+       *
+       * @details This overload provides a method for creating an option with both an Option passed directly from R in addition to a custom
+       * error message.
+       *
+       * @option SEXP& _option A single string SEXP of pryr::sexp_type(_option) == STRSXP.
+       * @param string _errmsg error message used for printing when inappropriate options are provided. " [Given=%s, valid={%s}]" is added to the
+       * argument
+       */
       Option(const SEXP& _option, const string _errmsg) : errmsg(_errmsg + " [Given=%s, valid={%s}]"){
         add(_option);
       }
+      /* Constructor overload for providing custom error message
+       *
+       * @param _errmsg error message used for printing when inappropriate options are provided. " [Given=%s, valid={%s}]" is added to the
+       * argument
+       */
+      Option(const string _errmsg) : errmsg(_errmsg + " [Given=%s, valid={%s}]"){}
+      /* Default constructor
+       */
+      Option(){}
 
       inline void add(const string& _option){
         if(_option.empty() == true)
@@ -71,6 +101,8 @@ namespace cmd_args{
           throwerr(Rf_type2char(TYPEOF(_option)));
         if(Rf_xlength(_option) != 1)
           throwerr("CharacterVector");
+        if(_option == NA_STRING)
+          throwerr("empty string");
         const char* optionValue = CHAR(STRING_ELT(_option, 0));
         if(strlen(optionValue) == 0)
           throwerr("empty string");
@@ -82,7 +114,7 @@ namespace cmd_args{
         }
         throwerr(tf);
       }
-      // Given a listOption already. No need to check, but copy value
+
       inline void add(T _option){
         this -> option = _option;
       }
