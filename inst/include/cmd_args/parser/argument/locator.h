@@ -49,6 +49,7 @@ namespace cmd_args::parser{
     unordered_set<std::string>::iterator e;
     unordered_map<string, list<vector<string>>> parsedArgs;
     bool argsAdded = false, argsParsed = false;
+  private:
     size_t minSize;
     // Check a single argument to see if it contains a flag identifier
     inline bool isFlag(const string& arg) const {
@@ -137,23 +138,26 @@ namespace cmd_args::parser{
   public:
     // args gets killed (at least until the implementation is fully done)
     // so cannot pass by reference
-    argument_locator(const vector<string> args, vector<string>& _lookups):
+    argument_locator(const vector<string>& args, vector<string>& _lookups):
        rawArgs(args){
       argsAdded = true;
-      argsParsed = false;
       parse(_lookups);
         // generate lookup list sorted by size.
     };
-    argument_locator(const vector<string> args):rawArgs(args){
+    argument_locator(const vector<string>& args):rawArgs(args){
       argsAdded = true;
     };
     argument_locator(){};
 
-    inline void insert(const vector<string>(args)){
+    inline void insert(const vector<string>& args){
       rawArgs.insert(rawArgs.end(), args.begin(), args.end());
       argsAdded = true;
       argsParsed = false;
-
+    }
+    inline void insert(const vector<string>&& args){
+      rawArgs.insert(rawArgs.end(), move_iterator(args.begin()), move_iterator(args.end()));
+      argsAdded = true;
+      argsParsed = false;
     }
     // reset all containers and flags
     inline void clear(){

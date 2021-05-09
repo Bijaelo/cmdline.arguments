@@ -13,6 +13,7 @@
 #include <string>
 #include <string_view>
 #include <list>
+#include <iterator>
 #include <cmd_args/parser/argument/argument.h>
 #include <cmd_args/parser/argument/locator.h>
 #include <cmd_args/utils/options.h>
@@ -27,16 +28,25 @@ private:
   list<cmd_argument> args;
   const bool allow_unknown_flags{false}, allow_duplicate_flags{true};
 
-
   cmd_args::parser::argument_locator locator;
   // Flag for handling if the same flag is provided muliple time?
   multi_flag_handling option{"Invalid option provided to parser for handling multiple flags"};
 
 public:
   argument_container() {};
-  argument_container(bool allow_unknown_flags, bool allow_duplicate_flags)
+  argument_container(bool& allow_unknown_flags, bool& allow_duplicate_flags)
       : allow_unknown_flags(allow_unknown_flags),
         allow_duplicate_flags(allow_duplicate_flags){};
+  argument_container(bool& allow_unknown_flags, bool& allow_duplicate_flags, vector<string>&& rawArgs)
+    : allow_unknown_flags(allow_unknown_flags),
+      allow_duplicate_flags(allow_duplicate_flags){
+      locator.insert(rawArgs);
+    };
+  argument_container(bool& allow_unknown_flags, bool& allow_duplicate_flags, vector<string>& rawArgs)
+    : allow_unknown_flags(allow_unknown_flags),
+      allow_duplicate_flags(allow_duplicate_flags){
+      locator.insert(rawArgs);
+    };
 
 
   template<typename T, typename O, typename F>

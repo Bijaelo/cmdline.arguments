@@ -72,6 +72,31 @@ expect_identical(test_iterate(XPtr1),
                       list('--fool', list(c('34', 'abc', 'dfd', 'cc'),
                                           c('44')))))
 
+# Test the default initializer
+expect_silent(XPtr3 <- test_default_initializer())
+expect_silent(XPtr4 <- test_default_initializer())
+
+# Test rvalue and lvalue insert
+expect_silent(test_insert_lvalue(XPtr3, case1[['args']]))
+expect_silent(test_parse(XPtr3, case1$flags))
+
+expect_identical(test_get(XPtr3, '--fool'), list(c('34', 'abc', 'dfd', 'cc'), c('44')))
+
+expect_silent(test_insert_rvalue(XPtr4, case1[['args']]))
+expect_error(test_get(XPtr4, '--fool'), pattern = 'not parsed')
+expect_silent(test_parse(XPtr4, case1$flags))
+expect_identical(test_get(XPtr4, '--fool'), list(c('34', 'abc', 'dfd', 'cc'), c('44')))
+expect_identical(test_get(XPtr3, '--fool'), list(c('34', 'abc', 'dfd', 'cc'), c('44')))
+
+# Test that the rvalue and lvalue have been copied and moved correctly.
+rm(case1)
+invisible(gc(verbose = FALSE))
+expect_identical(test_get(XPtr4, '--fool'), list(c('34', 'abc', 'dfd', 'cc'), c('44')))
+expect_identical(test_get(XPtr3, '--fool'), list(c('34', 'abc', 'dfd', 'cc'), c('44')))
+
+
 # Clean the environment
 
-rm(case1, case2, case3, XPtr1, XPtr2, XPtr3)
+rm(case2, case3, XPtr1, XPtr2, XPtr3, XPtr4)
+
+
