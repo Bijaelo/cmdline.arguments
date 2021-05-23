@@ -1,5 +1,5 @@
 # Default make file
-PKG_CPPFLAGS=-I.
+PKG_CPPFLAGS=-I. -I../inst/include/ -Wno-sign-compare
 
 CXX_STD = CXX20
 

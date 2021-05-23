@@ -8,7 +8,7 @@ The package is developed in R and currently requires C++17 and R-4.0.0 to functi
 # Where are we in the development process before release?
 The development process of cmdline.arguments is an iterative cycle, so any or all of the below described points may changed at any point up till version 1.0.0 (release). So while these do illustrate the release features of the current imagination of the package, do keep this in mind.
 
-- [-] Develope the "bones" of the package 
+- [x] Develope the "bones" of the package 
   - [x] Implement handling for number of arguments 
     - [x] Implement and est narg class, handling options 'N', '-N', '+N', '?', '*' and '+'
   - [x] Implement and test parser function class
@@ -22,9 +22,9 @@ The development process of cmdline.arguments is an iterative cycle, so any or al
       2. a list with a single vector element
       3. a character vector
     - [x] Test and integrate with parser function class
-  - [-] Implement and test commandline locater class
+  - [x] Implement and test commandline locater class
     - [x] Implement V1 (legacy idea)
-    - [ ] re-implement to comply with the idea of cmdline.arguments V2, raw_arguments and so on.
+    - [x] re-implement to comply with the idea of cmdline.arguments V2, raw_arguments and so on.
   - [ ] Integrate all aspects with the argument and parser class
 - [-] Develope the "meat" of the package
   - [-] Implement and test Printer class (for help messages)

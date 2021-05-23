@@ -583,7 +583,8 @@ echo 'BEGIN {' >"$ac_tmp/subs1.awk" &&
 cat >>"$ac_tmp/subs1.awk" <<\_ACAWK &&
 S["LTLIBOBJS"]=""
 S["LIBOBJS"]=""
-S["SUBDIR_SOURCES"]="exports.cpp parser/argument/argument.cpp utils/cmd_coerce.cpp utils/exceptions.cpp utils/matching.cpp utils/Rapi.cpp "
+S["SUBDIR_SOURCES"]="exports.cpp parser/argument/class.cpp parser/argument/raw/class.cpp parser/narg/narg.cpp parser/pfunc/pfunc.cpp utils/converters/converters.cpp util"\
+"s/Rapi.cpp utils/type_name/type_name.cpp "
 S["target_alias"]=""
 S["host_alias"]=""
 S["build_alias"]=""

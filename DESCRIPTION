@@ -10,18 +10,13 @@ Authors@R:
 Description: cmdline.arguments provides an optimized high level interface for parsing commandline arguments intended for scripting. Users of argparse from python will find this interface familiar but more stable than the argparse or argparser package implemented in R. 
 License: GPL-3
 Encoding: UTF-8
-LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
-Depends:
-    R6 (>= 2.1.0),
-    utils,
-    glue (>= 1.4.2)
+Depends: 
+    utils
 Suggests: 
     covr,
-    testthat
-LinkingTo: 
-    Rcpp
+    tinytest
+LinkingTo: Rcpp
 Imports: 
-    Rcpp,
-    glue
+    Rcpp
