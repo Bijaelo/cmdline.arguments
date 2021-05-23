@@ -11,6 +11,7 @@ ptr1 <- test_container_initializer(FALSE, TRUE)
 
 # 2 and 3 should be identical.
 ptr2 <- test_container_initializer(FALSE, FALSE)
+ptr2 <- test_container_default_initializer()
 
 
 
@@ -27,49 +28,6 @@ arg2 <- list(name = "foo",
              option = 'v',
              choices = NULL)
 library(tinytest)
-expect_silent(test_add_argument(ptr1,
-                                arg1[["name"]],
-                                arg1[["flags"]],
-                                arg1[["meta"]],
-                                arg1[["action"]],
-                                arg1[["option"]],
-                                arg1[["choices"]]))
-expect_silent(test_add_argument(ptr1,
-                                arg2[["name"]],
-                                arg2[["flags"]],
-                                arg2[["meta"]],
-                                arg2[["action"]],
-                                arg2[["option"]],
-                                arg2[["choices"]]))
-
-test_getflags(ptr1)
-test_nargs(ptr1)
-test_nmappings(ptr1, 'test')
-expect_silent(test_add_argument(ptr2,
-                                arg1[["name"]],
-                                arg1[["flags"]],
-                                arg1[["meta"]],
-                                arg1[["action"]],
-                                arg1[["option"]],
-                                arg1[["choices"]]))
-expect_silent(test_add_argument(ptr2,
-                                arg2[["name"]],
-                                arg2[["flags"]],
-                                arg2[["meta"]],
-                                arg2[["action"]],
-                                arg2[["option"]],
-                                arg2[["choices"]]))
-
-test_getflags(ptr2)
-test_nargs(ptr2)
-
-expect_silent(test_add_argument(ptr3,
-                  arg1[["name"]],
-                  arg1[["flags"]],
-                  arg1[["meta"]],
-                  arg1[["action"]],
-                  arg1[["option"]],
-                  arg1[["choices"]]))
 
 expect_silent(test_add_argument(ptr1,
                   arg2[["name"]],

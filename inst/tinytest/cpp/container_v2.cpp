@@ -1,6 +1,9 @@
 /*
- * Test for rebuilding argument container using string_view containers.
- * Currently V1 did not succesfully
+ * Current job:
+ * Integrate argument_locator
+ * 1) Create interface through both the constructer, and "add_raw" method and a "overwrite_raw" method
+ * 2) Add methhods in the argument class for extracting informatio from the locator
+ * 3) Test that it works and extracts the appropriate information.
  */
 
 // [[Rcpp::plugins("cpp2a")]]
@@ -26,7 +29,7 @@ private:
   unordered_set<string_view> flags;
   unordered_multimap<string_view, cmd_argument&> mapper;
   list<cmd_argument> args;
-  const bool allow_unknown_flags{false}, allow_duplicate_flags{true};
+  const bool allow_unknown_flags{false}, allow_duplicate_flags{false};
 
   cmd_args::parser::argument_locator locator;
   // Flag for handling if the same flag is provided muliple time?
@@ -94,20 +97,46 @@ public:
   const unordered_multimap<string_view, cmd_argument&> getmapping() const {
     return mapper;
   }
+  void add_raw(vector<string>& raw){
+    locator.insert(raw);
+  }
+  void add_raw(vector<string>&& raw){
+    locator.insert(raw);
+  }
+  void overwrite_raw(vector<string>& raw){
+    locator.clear();
+    locator.insert(raw):
+  }
+  void overwrite_raw(vector<string>&& raw){
+    locator.clear();
+    locator.insert(raw):
+  }
 };
 
+// [[Rcpp::export]]
+void test_add_raw(XPtr<argument_container> Xptr, vector<string>& raw){
+  Xptr -> add_raw(raw);
+}
+
+// [[Rcpp::export]]
+void test_overwrite_raw(XPtr<argument_container> Xptr, vector<string>& raw){
+  Xptr -> overwrite_raw(raw);
+}
 
 // [[Rcpp::export]]
 XPtr<argument_container> test_container_default_initializer(){
   return XPtr<argument_container>(new argument_container());
 }
 
-
 // [[Rcpp::export]]
 XPtr<argument_container> test_container_initializer(bool allow_unknown_flags, bool allow_duplicate_flags){
   return XPtr<argument_container>(new argument_container(allow_unknown_flags, allow_duplicate_flags));
 }
 
+// [[Rcpp::export]]
+XPtr<argument_container> test_container_initializer_2(bool allow_unknown_flags, bool allow_duplicate_flags, vector<string> rawargs){
+  return XPtr<argument_container>(new argument_container(allow_unknown_flags, allow_duplicate_flags, rawargs));
+}
 
 // [[Rcpp::export]]
 void test_add_argument(XPtr<argument_container> Xptr,
