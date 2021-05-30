@@ -1,4 +1,4 @@
- if(is.null(Sys.getenv('CMD_ARG_ALL_TEST')))
+if(Sys.getenv('CMD_ARG_ALL_TEST') != "1")
   exit_file("Set CMD_ARG_ALL_TEST environment variable to run these tests in this file.")
 
 # Tinytest for <cmd_args/parser/argument/container.h>
@@ -11,7 +11,7 @@ ptr1 <- test_container_initializer(FALSE, TRUE)
 
 # 2 and 3 should be identical.
 ptr2 <- test_container_initializer(FALSE, FALSE)
-ptr2 <- test_container_default_initializer()
+ptr3 <- test_container_default_initializer()
 
 
 
@@ -27,32 +27,55 @@ arg2 <- list(name = "foo",
              action = 'store_true',
              option = 'v',
              choices = NULL)
-library(tinytest)
 
 expect_silent(test_add_argument(ptr1,
-                  arg2[["name"]],
-                  arg2[["flags"]],
-                  arg2[["meta"]],
-                  arg2[["action"]],
-                  arg2[["option"]],
-                  arg2[["choices"]]))
+                  arg1[["name"]],
+                  arg1[["flags"]],
+                  arg1[["meta"]],
+                  arg1[["action"]],
+                  arg1[["option"]],
+                  arg1[["choices"]]))
 
 expect_silent(test_add_argument(ptr2,
-                  arg2[["name"]],
-                  arg2[["flags"]],
-                  arg2[["meta"]],
-                  arg2[["action"]],
-                  arg2[["option"]],
-                  arg2[["choices"]]))
+                  arg1[["name"]],
+                  arg1[["flags"]],
+                  arg1[["meta"]],
+                  arg1[["action"]],
+                  arg1[["option"]],
+                  arg1[["choices"]]))
 
 expect_silent(test_add_argument(ptr3,
-                  arg2[["name"]],
-                  arg2[["flags"]],
-                  arg2[["meta"]],
-                  arg2[["action"]],
-                  arg2[["option"]],
-                  arg2[["choices"]]))
+                  arg1[["name"]],
+                  arg1[["flags"]],
+                  arg1[["meta"]],
+                  arg1[["action"]],
+                  arg1[["option"]],
+                  arg1[["choices"]]))
 
+
+expect_silent(test_add_argument(ptr1,
+                                arg2[["name"]],
+                                arg2[["flags"]],
+                                arg2[["meta"]],
+                                arg2[["action"]],
+                                arg2[["option"]],
+                                arg2[["choices"]]))
+
+expect_silent(test_add_argument(ptr2,
+                                arg2[["name"]],
+                                arg2[["flags"]],
+                                arg2[["meta"]],
+                                arg2[["action"]],
+                                arg2[["option"]],
+                                arg2[["choices"]]))
+
+expect_silent(test_add_argument(ptr3,
+                                arg2[["name"]],
+                                arg2[["flags"]],
+                                arg2[["meta"]],
+                                arg2[["action"]],
+                                arg2[["option"]],
+                                arg2[["choices"]]))
 
 expect_silent(test_add_argument(ptr1,
                   arg2[["name"]],
@@ -92,4 +115,5 @@ expect_true(all(sapply(list(test_getflags(ptr1),
                        function(x)all(x %in% c('--foo', '--test', '-t')))))
 
 
-
+rm(ptr1, ptr2, ptr3)
+gc()

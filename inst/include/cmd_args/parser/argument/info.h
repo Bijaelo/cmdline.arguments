@@ -380,7 +380,6 @@ namespace cmd_args::parser::argument{
             stop("Missing required parameter %s in argument list", iString);
         }
         vector<R_xlen_t> fieldsPositions(as<vector<R_xlen_t>>(hashTable.lookup(fields.get_ref())));
-        R_xlen_t nF = fieldsPositions.size();
         assignInfo(name, listInfo, fieldsPositions[0]);
         assignInfo(narg, listInfo, fieldsPositions[1]);
         assignInfo(meta, listInfo, fieldsPositions[2]);

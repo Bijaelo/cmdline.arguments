@@ -1,7 +1,7 @@
 Package: cmdline.arguments
 Title: Flexible and fully customizable commandline tool for R
  scripting and R based applications
-Version: 0.0.1
+Version: 0.2.0
 Authors@R: 
     person(given = "Oliver P.",
            family = "Madsen",

@@ -1,4 +1,4 @@
-
+// FIXME: Does not handle "positional only" arguments.
 
 #ifndef cmd_args_argument_locator_h
 #define cmd_args_argument_locator_h
@@ -48,6 +48,7 @@ namespace cmd_args::parser{
     set<size_t, std::greater<size_t>> sizes;
     unordered_set<std::string>::iterator e;
     unordered_map<string, list<vector<string>>> parsedArgs;
+    unordered_map<string, list<vector<string>>>::iterator positionals;
     bool argsAdded = false, argsParsed = false;
   private:
     size_t minSize;
@@ -96,7 +97,10 @@ namespace cmd_args::parser{
         // Maybe there's a better way to do this.. But this work.. I'll trust the compiler.
         list<vector<string>> posList;
         posList.push_back(positionals);
-        parsedArgs["positionals"] = posList;
+        parsedArgs["positionals"] = std::move(posList);
+        (this -> positionals) = parsedArgs.find("positionals");
+      }else{
+        (this -> positionals) = parsedArgs.end();
       }
     };
 
@@ -171,21 +175,55 @@ namespace cmd_args::parser{
     /* parse eisting arguments looking for "lookup" as flag indicator
      * Doesn't evaluate on the second execution, unless additiona args are passed first, or
      */
-    inline void parse(vector<string>& _lookups){
+    inline void parse(){
       if(argsAdded && !argsParsed){
-        if(_lookups.size() == 0)
-          throw invalid_argument("empty lookups provided for locator");
-        for(const auto& i: _lookups){
-          flag_lookups.insert(i);
-          sizes.insert(i.size());
-        }
-        parsedArgs.clear();
-        // Extract the "smallest" size of flag_lookups (the last value in sizes).
-        minSize = *(sizes.rbegin());
         vector<string>::const_iterator start = rawArgs.begin(),
           end = rawArgs.end();
         find_positionals(start, end);
-        find_flags(start, end);
+      }
+    }
+    inline void parse(vector<string>& _lookups){
+      if(argsAdded && !argsParsed){
+        if(_lookups.size() == 0){
+          vector<string>::const_iterator start = rawArgs.begin(),
+            end = rawArgs.end();
+          find_positionals(start, end);
+        }else{
+          for(const auto& i: _lookups){
+            flag_lookups.insert(i);
+            sizes.insert(i.size());
+          }
+          parsedArgs.clear();
+          // Extract the "smallest" size of flag_lookups (the last value in sizes).
+          minSize = *(sizes.rbegin());
+          vector<string>::const_iterator start = rawArgs.begin(),
+            end = rawArgs.end();
+          find_positionals(start, end);
+          find_flags(start, end);
+        }
+        argsParsed = true;
+      }
+    }
+    inline void parse(unordered_set<string>& _lookups){
+      if(argsAdded && !argsParsed){
+        if(_lookups.size() == 0){
+          vector<string>::const_iterator start = rawArgs.begin(),
+            end = rawArgs.end();
+          find_positionals(start, end);
+        }else{
+          auto b = _lookups.begin(), e = _lookups.end();
+          for(; b != e; b++){
+            flag_lookups.insert(*b);
+            sizes.insert((*b).size());
+          }
+          parsedArgs.clear();
+          // Extract the "smallest" size of flag_lookups (the last value in sizes).
+          minSize = *(sizes.rbegin());
+          vector<string>::const_iterator start = rawArgs.begin(),
+            end = rawArgs.end();
+          find_positionals(start, end);
+          find_flags(start, end);
+        }
         argsParsed = true;
       }
     }
@@ -220,7 +258,7 @@ namespace cmd_args::parser{
         i = parsedArgs.find(key);
       if(i == e)
         return list<vector<string>>(); // return empty list.
-      list<vector<string>> o = (i -> second);
+      list<vector<string>> o = (i -> second); // maybe this should use std::move?
       parsedArgs.erase(i); // remove element
       return o;
     }
@@ -240,6 +278,10 @@ namespace cmd_args::parser{
       if(i == e)
         return list<vector<string>>();
       return i -> second;
+    }
+    // Let this function "extract" arguments.
+    inline unordered_map<string, list<vector<string>>>::iterator& get_positionals(){
+      return positionals;
     }
     inline list<vector<string>> operator[](const string& key){
       return get(key);

@@ -1,4 +1,4 @@
-if(is.null(Sys.getenv('CMD_ARG_ALL_TEST')))
+if(Sys.getenv('CMD_ARG_ALL_TEST') != "1")
   exit_file("Set CMD_ARG_ALL_TEST environment variable to run these tests in this file.")
 
 

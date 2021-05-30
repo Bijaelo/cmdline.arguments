@@ -1,8 +1,4 @@
 
 
-export(add_argument)
-importFrom(R6, R6Class)
-importFrom(utils, head, tail)
 importFrom(Rcpp, evalCpp)
-importFrom(glue, glue)
 useDynLib(cmdline.arguments, .registration = TRUE)

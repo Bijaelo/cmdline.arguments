@@ -1,4 +1,4 @@
-if(is.null(Sys.getenv('CMD_ARG_ALL_TEST')))
+if(Sys.getenv('CMD_ARG_ALL_TEST') != "1")
   exit_file("Set CMD_ARG_ALL_TEST environment variable to run these tests in this file.")
 
 
@@ -18,3 +18,4 @@ expect_equivalent(test_option('iddaaadfsdf', msg = "hello world"), 0)
 expect_error(test_option(NA_character_, "hello world"))
 
 rm(options)
+gc()

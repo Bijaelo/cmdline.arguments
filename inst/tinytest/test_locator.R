@@ -1,4 +1,4 @@
-if(is.null(Sys.getenv('CMD_ARG_ALL_TEST')))
+if(Sys.getenv('CMD_ARG_ALL_TEST') != "1")
   exit_file("Set CMD_ARG_ALL_TEST environment variable to run these tests in this file.")
 
 Rcpp::sourceCpp("cpp/locator.cpp")
@@ -100,3 +100,4 @@ expect_identical(test_get(XPtr3, '--fool'), list(c('34', 'abc', 'dfd', 'cc'), c(
 rm(case2, case3, XPtr1, XPtr2, XPtr3, XPtr4)
 
 
+gc()

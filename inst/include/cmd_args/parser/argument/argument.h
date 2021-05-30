@@ -22,10 +22,10 @@ namespace cmd_args::parser::argument{
   // Container for all the information needed and passed around inside an Argument
   struct Info{
     string name,
-    narg, // narg is here, we dont need to have a string in the Narg class at all! Just use a string_view
-    meta,
-    action,
-    option;
+           narg, // narg is here, we dont need to have a string in the Narg class at all! Just use a string_view
+           meta,
+           action,
+           option;
     // helpFlags are stored in argument_container not Argument itself.
     string_view helpFlags;
 
@@ -59,7 +59,7 @@ namespace cmd_args::parser::argument{
   class Argument{
 
     Info info;
-
+    list<vector<string>> rawArgs;
     // transform string ot uppercase safely.
     inline void str_toupper(const string& x, string& out){
       out.clear();
@@ -267,6 +267,8 @@ namespace cmd_args::parser::argument{
       assignOption(option);
       assignChoices(choices);
     }
+    // Indicate that the argument is ready
+    bool ready, parsed;
   public:
     /* Default initializer.
      *
@@ -302,6 +304,21 @@ namespace cmd_args::parser::argument{
     inline const string_view name() const {
       return info.name;
     }
+    inline const bool isparsed() const{
+      return parsed;
+    }
+    inline const bool isready() const{
+      return ready;
+    }
+    inline void feed(list<vector<string>>& x){
+      for(auto i : x){
+        rawArgs.push_back(i);
+      }
+    }
+    inline void feed(list<vector<string>>&& x){
+      rawArgs = x;
+    }
+
 
   };
   // Typedef that exists to avoid collision with Rcpp::Argument. (Great question why that isn't documented or implemented as Argument__impl).

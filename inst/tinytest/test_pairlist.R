@@ -1,4 +1,4 @@
-if(is.null(Sys.getenv('CMD_ARG_ALL_TEST')))
+if(Sys.getenv('CMD_ARG_ALL_TEST') != "1")
   exit_file("Set CMD_ARG_ALL_TEST environment variable to run these tests in this file.")
 
 
@@ -10,3 +10,5 @@ expect_equal(test_pairlist(list(1, 30), rep), do.call(rep, list(1, 30)))
 
 expect_identical(test_pairlist(list(formula = mpg ~ hp, data = mtcars), lm),
                  do.call(lm, list(formula = mpg ~ hp, data = mtcars)))
+
+gc()

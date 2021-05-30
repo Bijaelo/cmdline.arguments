@@ -1,9 +1,16 @@
 /*
  * Current job:
  * Integrate argument_locator
- * 1) Create interface through both the constructer, and "add_raw" method and a "overwrite_raw" method
- * 2) Add methhods in the argument class for extracting informatio from the locator
- * 3) Test that it works and extracts the appropriate information.
+ * 1) Currently working on feed_argument, force_feed and find_lookups
+ *   - Currently I have noticed a problem with positional arguments. locator::get_positionals now returns an iterator, with the idea being that we can "pop" positionals,
+ *     or save an iterator to the vectors elements of positionals.
+ *   - But I'm not sure that argument.h actually supports positional arguments at all right now? This needs to be changed before I can test this
+ *   - Once I know it does support it and how I implemented it, the positional arguments needs to be fed until it has been filled, and then the argument should move on.
+ *   - If the argument is "fed" prior to argument being exhausted it will have to check whether other arguments are positionals, and throw an error if so.
+ *     If it is not filled, the error comes fom the argument itself.
+ * 2) Once that has been fixed, we need a method that is facing "outwards" from the container.
+ *
+ * 3) Finaly once the out-facing method is made it should be tested..
  */
 
 // [[Rcpp::plugins("cpp2a")]]
@@ -34,6 +41,52 @@ private:
   cmd_args::parser::argument_locator locator;
   // Flag for handling if the same flag is provided muliple time?
   multi_flag_handling option{"Invalid option provided to parser for handling multiple flags"};
+  // FIXME:
+  // How do we incorporate positional arguments?
+  inline unordered_set<string> find_lookups() const {
+    auto b = flags.cbegin(), e = flags.cend();
+    unordered_set<string> lookups;
+    bool defaults = false;
+    for(; b != e && !defaults; b++){
+      auto sb = (*b).begin(), sb2 = (*b).begin(), se = (*b).end();
+      while(isalnum(*sb) && sb != se){
+        sb++;
+      }
+      if(sb != se && sb != sb2)
+        lookups.emplace(std::forward<string_view::const_iterator>(sb2),
+                        std::forward<string_view::const_iterator>(sb));
+    }
+    return lookups;
+  }
+  inline void feed_argument(cmd_argument& arg){
+    if(!arg.isready()){
+      auto flags = arg.flags();
+      auto b = flags.cbegin(), e = flags.cend();
+      if(b == e){
+        // positional argument
+
+      }else{
+        // Non-positional
+        for(; b != e; b++){
+          if(locator.contains(*b)){
+            if(allow_duplicate_flags){
+              arg.feed(locator.get(*b));
+            }else{
+              arg.feed(locator.pop(std::move(*b)));
+            }
+          }
+        }
+      }
+      arg.forceready();
+    }
+  }
+  inline void force_feed(){
+    if(!locator.is_parsed())
+      locator.parse(find_lookups());// FIXME: needs to be tested for both "positional only", "flags only", "positional and flags" and maybe other combinations as well..
+    for(auto i : args) {
+      feed_argument(i);
+    }
+  }
 
 public:
   argument_container() {};
@@ -88,28 +141,28 @@ public:
     }
     mapper.insert({a.name(), a});
   }
-  const unordered_set<string_view>& getflags() const {
+  inline const unordered_set<string_view>& getflags() const {
     return flags;
   }
-  const list<cmd_argument>& getargs() const {
+  inline const list<cmd_argument>& getargs() const {
     return args;
   }
-  const unordered_multimap<string_view, cmd_argument&> getmapping() const {
+  inline const unordered_multimap<string_view, cmd_argument&> getmapping() const {
     return mapper;
   }
-  void add_raw(vector<string>& raw){
+  inline void add_raw(vector<string>& raw){
     locator.insert(raw);
   }
-  void add_raw(vector<string>&& raw){
+  inline void add_raw(vector<string>&& raw){
     locator.insert(raw);
   }
-  void overwrite_raw(vector<string>& raw){
+  inline void overwrite_raw(vector<string>& raw){
     locator.clear();
-    locator.insert(raw):
+    locator.insert(raw);
   }
-  void overwrite_raw(vector<string>&& raw){
+  inline void overwrite_raw(vector<string>&& raw){
     locator.clear();
-    locator.insert(raw):
+    locator.insert(raw);
   }
 };
 
@@ -173,5 +226,16 @@ size_t test_nargs(XPtr<argument_container> Xptr){
 size_t test_nmappings(XPtr<argument_container> Xptr, string name){
   auto mapp = Xptr -> getmapping();
   return mapp.count(string_view(name));
+}
+
+// [[Rcpp::export]]
+size_t test_nflags(XPtr<argument_container> Xptr){
+  return (Xptr -> getflags()).size();
+}
+
+
+// [[Rcpp::export]]
+size_t test_narguments(XPtr<argument_container> Xptr){
+  return (Xptr -> getargs()).size();
 }
 

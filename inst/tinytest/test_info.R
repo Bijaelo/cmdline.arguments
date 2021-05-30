@@ -1,4 +1,4 @@
-if(is.null(Sys.getenv('CMD_ARG_ALL_TEST')))
+if(Sys.getenv('CMD_ARG_TEST_DEPRECATED') != "1")
   exit_file("Set CMD_ARG_ALL_TEST environment variable to run these tests in this file.")
 
 Rcpp::sourceCpp('cpp/info.cpp')
@@ -44,4 +44,3 @@ args <- list(name = 'test',
 ## ~Setup ##
 ###      ###
 }
-expect_inherits
