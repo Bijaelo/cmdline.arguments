@@ -1,1 +1,9 @@
 .Rproj.user
+ArrowTest_mtcars
+ArrowTest_mtcars*
+.Rhistory
+config.log
+config.status
+github-ssh
+github-ssh.pub
+.RData
